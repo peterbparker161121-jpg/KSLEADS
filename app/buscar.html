@@ -247,7 +247,7 @@
       document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
     }
 
-    // Submissão da Pesquisa
+    // Submissão da pesquisa — motor gratuito e real (OpenStreetMap/Overpass)
     document.getElementById('search-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -257,55 +257,214 @@
       const opportunity_filter = document.getElementById('filter-opportunity').checked;
       const no_website = document.getElementById('filter-no-website').checked;
       const has_whatsapp = document.getElementById('filter-whatsapp').checked;
-      const min_reviews = parseInt(document.getElementById('filter-reviews').value, 10);
+      const min_reviews = parseInt(document.getElementById('filter-reviews').value, 10) || 0;
 
       document.getElementById('results-container').style.display = 'none';
       document.getElementById('search-loading').style.display = 'block';
 
       try {
-        const response = await fetch('/api/search/leads', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentSession.token}`
-          },
-          body: JSON.stringify({
-            category,
-            city,
-            state,
-            opportunity_filter,
-            no_website,
-            has_whatsapp,
-            min_reviews
-          })
-        });
+        const leads = await searchRealLeads({ category, city, state });
+        let filtered = leads;
 
-        const data = await response.json();
+        // Só aplicamos filtros quando existe dado real para avaliá-los.
+        if (no_website) filtered = filtered.filter(l => l.website_status === 'site_nao_encontrado');
+        if (has_whatsapp) filtered = filtered.filter(l => l.whatsapp_status === 'confirmado');
+        if (min_reviews > 0) {
+          filtered = filtered.filter(l => Number.isFinite(l.google_reviews_count) && l.google_reviews_count >= min_reviews);
+          if (!filtered.length && leads.length) {
+            Utils.showToast('A fonte gratuita não fornece avaliações Google para esses resultados. O filtro de avaliações não pode ser validado nesta busca.', 'warning');
+          }
+        }
+        if (opportunity_filter) {
+          filtered = filtered.filter(l => l.website_status === 'site_nao_encontrado' && l.business_phone && l.whatsapp_status === 'confirmado');
+        }
+
+        filtered.sort((a, b) => b.opportunity_score - a.opportunity_score);
+        currentResults = filtered;
+
         document.getElementById('search-loading').style.display = 'none';
-
-        if (!response.ok) {
-          Utils.showToast(data.error || 'Não foi possível concluir esta consulta. Tente novamente em alguns instantes.', 'error');
-          return;
-        }
-
-        currentResults = data.leads || [];
         document.getElementById('results-count').textContent = currentResults.length;
-        document.getElementById('results-meta').textContent = `Pesquisa por "${category}" em ${city} - ${state}`;
-        
-        if (data.is_admin) {
-          document.getElementById('top-credit-badge').textContent = 'Admin Peter (Ilimitado)';
-        } else {
-          document.getElementById('top-credit-badge').textContent = `Saldo: ${data.credit_balance} créditos`;
-        }
+        document.getElementById('results-meta').textContent = `Pesquisa real por "${category}" em ${city} - ${state}`;
+        document.getElementById('top-credit-badge').textContent = currentSession.profile?.role === 'admin'
+          ? 'Admin (Ilimitado)'
+          : `Saldo: ${currentSession.profile?.credit_balance ?? 0} créditos`;
 
         renderResults(currentResults);
         document.getElementById('results-container').style.display = 'block';
 
+        // Registra a pesquisa para usuários que tenham permissão de INSERT.
+        try {
+          const sb = getSupabase();
+          await sb.from('searches').insert({
+            user_id: currentSession.user.id,
+            category,
+            city,
+            state: state.toUpperCase(),
+            filters: { no_website, has_whatsapp, min_reviews, opportunity_filter },
+            results_count: currentResults.length,
+            credits_used: currentSession.profile?.role === 'admin' ? 0 : 0
+          });
+        } catch (_) { /* log não pode impedir a pesquisa */ }
+
       } catch (err) {
         document.getElementById('search-loading').style.display = 'none';
-        Utils.showToast('Não foi possível concluir esta consulta. Verifique sua conexão e tente novamente.', 'error');
+        console.error('[KS Leads] Erro na busca real:', err);
+        Utils.showToast(err.message || 'Não foi possível realizar a busca gratuita.', 'error');
       }
     });
+
+    function normalizeText(value) {
+      return (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
+    function escapeOverpass(value) {
+      return String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    }
+
+    function categoryToTags(category) {
+      const c = normalizeText(category);
+      if (c.includes('dent') || c.includes('odonto')) return ['amenity=dentist'];
+      if (c.includes('restaurante') || c.includes('pizzaria')) return ['amenity=restaurant'];
+      if (c.includes('bar')) return ['amenity=bar'];
+      if (c.includes('farmacia') || c.includes('drogaria')) return ['amenity=pharmacy'];
+      if (c.includes('clinica') || c.includes('medic')) return ['amenity=clinic', 'amenity=doctors'];
+      if (c.includes('academia') || c.includes('fitness')) return ['leisure=fitness_centre'];
+      if (c.includes('advog') || c.includes('advocacia')) return ['office=lawyer'];
+      if (c.includes('oficina') || c.includes('mecan')) return ['shop=car_repair'];
+      if (c.includes('cabeleire') || c.includes('barbear')) return ['shop=hairdresser', 'shop=beauty'];
+      if (c.includes('hotel') || c.includes('pousada')) return ['tourism=hotel', 'tourism=guest_house'];
+      if (c.includes('mercado') || c.includes('supermercado')) return ['shop=supermarket'];
+      return ['name', 'shop'];
+    }
+
+    async function fetchJson(url, options = {}) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), options.timeout || 15000);
+      try {
+        const response = await fetch(url, { signal: controller.signal, headers: { 'Accept': 'application/json' } });
+        if (!response.ok) throw new Error(`Fonte retornou HTTP ${response.status}`);
+        return await response.json();
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    async function geocodeCity(city, state) {
+      const q = `${city}, ${state}, Brasil`;
+      const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(q)}`;
+      const data = await fetchJson(url, { timeout: 12000 });
+      if (!data.length) throw new Error(`Não foi possível localizar "${city} - ${state}".`);
+      return { lat: Number(data[0].lat), lon: Number(data[0].lon), display: data[0].display_name };
+    }
+
+    async function queryOverpass(lat, lon, tags) {
+      const radius = 15000;
+      const clauses = tags.map(tag => {
+        if (tag === 'name') return `nwr["name"](around:${radius},${lat},${lon});`;
+        const [key, value] = tag.split('=');
+        return `nwr["${escapeOverpass(key)}"="${escapeOverpass(value)}"](around:${radius},${lat},${lon});`;
+      }).join('\n');
+
+      const query = `[out:json][timeout:25];(${clauses});out center tags;`;
+      const endpoints = [
+        'https://overpass-api.de/api/interpreter',
+        'https://overpass.kumi.systems/api/interpreter'
+      ];
+
+      let lastError = null;
+      for (const endpoint of endpoints) {
+        try {
+          const url = `${endpoint}?data=${encodeURIComponent(query)}`;
+          const data = await fetchJson(url, { timeout: 30000 });
+          return data.elements || [];
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      throw new Error(`Não foi possível consultar as fontes gratuitas de mapas. ${lastError?.message || ''}`);
+    }
+
+    function buildRealLead(el, category, city, state, idx) {
+      const tags = el.tags || {};
+      const name = tags.name || tags.brand;
+      if (!name) return null;
+
+      const rawPhone = tags.phone || tags['contact:phone'] || tags['contact:mobile'] || '';
+      const rawWebsite = tags.website || tags['contact:website'] || tags.url || '';
+      const phoneDigits = rawPhone.replace(/\D/g, '');
+      const hasWebsite = /^https?:\/\//i.test(rawWebsite) || /^www\./i.test(rawWebsite);
+      const addressParts = [
+        tags['addr:street'] && `${tags['addr:street']}${tags['addr:housenumber'] ? `, ${tags['addr:housenumber']}` : ''}`,
+        tags['addr:suburb'], tags['addr:postcode']
+      ].filter(Boolean);
+
+      // Celular não é prova de WhatsApp. Apenas marcamos como não confirmado.
+      const whatsappStatus = phoneDigits ? 'nao_confirmado' : 'nao_encontrado';
+      const websiteStatus = hasWebsite ? 'site_encontrado' : 'site_nao_encontrado';
+      let score = 0;
+      if (!hasWebsite) score += 50;
+      if (rawPhone) score += 25;
+      if (tags['opening_hours']) score += 10;
+      if (tags['addr:street']) score += 5;
+
+      const lat = Number(el.lat ?? el.center?.lat);
+      const lon = Number(el.lon ?? el.center?.lon);
+      const mapQuery = `${name} ${city} ${state}`;
+
+      return {
+        id: `osm_${el.type}_${el.id}`,
+        business_name: name,
+        trade_name: tags.name || name,
+        legal_name: null,
+        cnpj: tags['ref:vat'] || tags['tax_id'] || tags['ref:cnpj'] || null,
+        cnpj_status: null,
+        registered_phone: null,
+        business_phone: formatPhoneForUI(rawPhone),
+        whatsapp_status: whatsappStatus,
+        website_status: websiteStatus,
+        website_url: rawWebsite || null,
+        google_rating: null,
+        google_reviews_count: null,
+        google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`,
+        category,
+        address: addressParts.join(' — ') || 'Endereço não informado na fonte',
+        city,
+        state: state.toUpperCase(),
+        latitude: Number.isFinite(lat) ? lat : null,
+        longitude: Number.isFinite(lon) ? lon : null,
+        opportunity_score: Math.min(score, 100),
+        sources_metadata: {
+          provider: 'OpenStreetMap / Overpass',
+          source_url: 'https://www.openstreetmap.org/',
+          collected_at: new Date().toISOString(),
+          note: 'Dados públicos retornados pela fonte. Campos ausentes não foram inferidos.'
+        }
+      };
+    }
+
+    function formatPhoneForUI(raw) {
+      if (!raw) return '';
+      const d = raw.replace(/\D/g, '');
+      if (d.length === 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+      if (d.length === 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+      if (d.length === 13 && d.startsWith('55')) return `+55 (${d.slice(2,4)}) ${d.slice(4,9)}-${d.slice(9)}`;
+      return raw;
+    }
+
+    async function searchRealLeads({ category, city, state }) {
+      if (!category || !city) throw new Error('Informe a categoria e a cidade para pesquisar.');
+      const location = await geocodeCity(city, state);
+      const tags = categoryToTags(category);
+      const elements = await queryOverpass(location.lat, location.lon, tags);
+      const unique = new Map();
+      for (const el of elements) {
+        const lead = buildRealLead(el, category, city, state, unique.size);
+        if (lead && !unique.has(lead.business_name.toLowerCase())) unique.set(lead.business_name.toLowerCase(), lead);
+      }
+      const leads = Array.from(unique.values()).slice(0, 50);
+      if (!leads.length) throw new Error(`Nenhuma empresa real foi encontrada para "${category}" em ${city}/${state}. Tente uma categoria diferente.`);
+      return leads;
+    }
 
     // Renderização dos cards de leads
     function renderResults(leads) {
@@ -353,18 +512,18 @@
               <div>
                 <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Telefone Cadastral (Receita/CNPJ)</span>
                 <span style="color: ${lead.registered_phone ? '#fff' : 'var(--text-muted)'}; font-size: 0.95rem;">
-                  ${lead.registered_phone || 'Consultar Enriquecimento'}
+                  ${lead.registered_phone || 'Não encontrado na fonte'}
                 </span>
               </div>
 
               <div>
                 <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">CNPJ</span>
-                <span style="color: #fff;">${lead.cnpj ? Utils.formatCNPJ(lead.cnpj) : 'Disponível no enriquecimento'}</span>
+                <span style="color: #fff;">${lead.cnpj ? Utils.formatCNPJ(lead.cnpj) : 'Não encontrado na fonte'}</span>
               </div>
 
               <div>
                 <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Avaliações Google</span>
-                <span>⭐ <strong>${lead.google_rating || '4.5'}</strong> (${lead.google_reviews_count || '15'} avaliações)</span>
+                <span>${lead.google_rating != null && lead.google_reviews_count != null ? `⭐ <strong>${lead.google_rating}</strong> (${lead.google_reviews_count} avaliações)` : 'Não disponível na fonte gratuita'}</span>
               </div>
             </div>
 
@@ -430,7 +589,7 @@
           trade_name: lead.trade_name,
           legal_name: lead.legal_name,
           cnpj: lead.cnpj,
-          cnpj_status: lead.cnpj_status || 'ATIVA',
+          cnpj_status: lead.cnpj_status || null,
           registered_phone: lead.registered_phone,
           business_phone: lead.business_phone,
           whatsapp_status: lead.whatsapp_status,
@@ -481,7 +640,7 @@
           trade_name: lead.trade_name,
           legal_name: lead.legal_name,
           cnpj: lead.cnpj,
-          cnpj_status: lead.cnpj_status || 'ATIVA',
+          cnpj_status: lead.cnpj_status || null,
           registered_phone: lead.registered_phone,
           business_phone: lead.business_phone,
           whatsapp_status: lead.whatsapp_status,
