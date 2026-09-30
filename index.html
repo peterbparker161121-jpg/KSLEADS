@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KS Leads — Encontre empresas. Encontre oportunidades. Venda mais.</title>
+  <meta name="description" content="A plataforma definitiva de prospecção comercial para desenvolvedores e agências. Encontre empresas ativas sem site, valide telefones e WhatsApp e venda mais serviços digitais.">
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body style="background-color: #050811;">
+
+  <!-- Header / Navbar -->
+  <header style="border-bottom: 1px solid var(--border-subtle); background: rgba(8, 12, 20, 0.85); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 50;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <a href="/" class="brand-logo" style="font-size: 1.4rem;">
+        KS <span>LEADS</span>
+      </a>
+
+      <nav style="display: flex; align-items: center; gap: 1.5rem;">
+        <a href="#recursos" style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Recursos</a>
+        <a href="#como-funciona" style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Como Funciona</a>
+        <a href="#precos" style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Planos</a>
+        <a href="#faq" style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Dúvidas</a>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <a href="/login.html" class="btn btn-outline btn-sm">Entrar</a>
+        <a href="#precos" class="btn btn-primary btn-sm">Começar Agora</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section style="padding: 5rem 1.5rem 4rem; text-align: center; position: relative; overflow: hidden;">
+    <div style="max-width: 900px; margin: 0 auto; position: relative; z-index: 10;">
+      <span class="badge badge-info" style="margin-bottom: 1.25rem; font-size: 0.85rem; padding: 0.4rem 1rem;">
+        🚀 Prospecção Ativa B2B Especializada
+      </span>
+
+      <h1 style="font-size: 3.25rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.25rem; line-height: 1.15;">
+        Encontre empresas.<br>
+        Encontre oportunidades.<br>
+        <span style="color: var(--accent);">Venda mais sites e tecnologia.</span>
+      </h1>
+
+      <p style="font-size: 1.2rem; color: #94a3b8; line-height: 1.6; margin-bottom: 2.5rem; max-width: 780px; margin-left: auto; margin-right: auto;">
+        Descubra empresas ativas em qualquer cidade do Brasil, identifique negócios com avaliações no Google que ainda não possuem site profissional, valide telefones cadastrais e WhatsApp direto do tomador de decisão.
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+        <a href="#precos" class="btn btn-primary btn-lg">
+          Escolher Plano & Começar
+        </a>
+        <a href="/login.html" class="btn btn-secondary btn-lg">
+          Acessar Minha Conta
+        </a>
+      </div>
+
+      <div style="margin-top: 2rem; font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;">
+        <span>✓ Sem fidelidade</span>
+        <span>✓ Pagamento seguro via Cakto</span>
+        <span>✓ Enriquecimento de CNPJ em tempo real</span>
+        <span>✓ Conformidade com a LGPD</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Live Simulator Demo -->
+  <section style="padding: 2rem 1.5rem 5rem; max-width: 1100px; margin: 0 auto;" id="como-funciona">
+    <div class="card" style="border-color: var(--border-highlight); background: #0b1120; box-shadow: var(--shadow-glow); padding: 2rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <span class="badge badge-success" style="margin-bottom: 0.5rem;">Simulador Real de Prospecção</span>
+          <h3 style="color: #fff;">Veja como uma oportunidade é detectada</h3>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <span class="badge badge-info">Filtro: Oportunidade para Site Ativado</span>
+        </div>
+      </div>
+
+      <!-- Exemplo de Card de Resultado do KS Leads -->
+      <div class="card" style="background: var(--bg-card); border-left: 4px solid var(--success);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <h4 style="font-size: 1.35rem; color: #fff; margin-bottom: 0.25rem;">CLÍNICA ODONTO PRIMAVERA</h4>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+              📍 Av. Presidente Vargas, 1420 — Rio Claro/SP • Dentistas & Ortodontia
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;">
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Índice de Oportunidade</span>
+            <div class="opp-meter">
+              <div class="opp-bar-bg" style="width: 140px;">
+                <div class="opp-bar-fill" style="width: 95%; background: var(--success);"></div>
+              </div>
+              <span class="opp-score-text" style="color: var(--success);">95/100</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1rem; background: var(--bg-elevated); border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.875rem;">
+          <div>
+            <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Telefone da Empresa</span>
+            <strong style="color: #fff; font-size: 0.95rem;">(19) 99823-4512</strong>
+            <div style="margin-top: 0.25rem;"><span class="badge badge-success">✓ WhatsApp Confirmado</span></div>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Telefone Cadastral (Receita/CNPJ)</span>
+            <strong style="color: #cbd5e1; font-size: 0.95rem;">(19) 3524-1190</strong>
+            <span style="display: block; font-size: 0.75rem; color: var(--text-muted);">Registro oficial</span>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">CNPJ & Situação</span>
+            <span style="color: #fff;">18.345.678/0001-92 (Ativa)</span>
+          </div>
+
+          <div>
+            <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Google Avaliações</span>
+            <span>⭐ <strong>4.9</strong> (87 avaliações reais)</span>
+          </div>
+        </div>
+
+        <div style="padding: 0.75rem 1rem; background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="color: var(--text-muted); font-size: 0.85rem;">Status do Site:</span>
+            <strong style="color: var(--warning); font-size: 0.875rem; margin-left: 0.5rem;">Site não encontrado nas fontes consultadas.</strong>
+          </div>
+          <span class="badge badge-warning">🎯 Empresa Ativa e Lucrativa Sem Site</span>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <a href="#precos" class="btn btn-primary btn-sm">Quero Leads Como Esse</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Core Features Grid -->
+  <section style="padding: 4rem 1.5rem; max-width: 1200px; margin: 0 auto;" id="recursos">
+    <div style="text-align: center; margin-bottom: 3.5rem;">
+      <h2 style="font-size: 2.25rem; margin-bottom: 0.75rem;">Recursos Desenvolvidos para Fechar Contratos</h2>
+      <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+        Chega de catar empresas manualmente no Google Maps sem saber se têm site ou número de WhatsApp.
+      </p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem;">
+      <div class="card">
+        <div style="font-size: 2.25rem; margin-bottom: 1rem;">🌐</div>
+        <h3 style="color: #fff; margin-bottom: 0.5rem;">Detector de Oportunidades para Site</h3>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Identifica automaticamente estabelecimentos comerciais e prestadores de serviços com clientela ativa no Google que ainda não têm presença digital própria.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2.25rem; margin-bottom: 1rem;">📞</div>
+        <h3 style="color: #fff; margin-bottom: 0.5rem;">Dois Telefones: Cadastral vs. Empresa</h3>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Distinção clara entre o <strong>Telefone Cadastral</strong> (registrado na Receita Federal/contabilidade) e o <strong>Telefone da Empresa</strong> (usado no atendimento ao cliente).
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2.25rem; margin-bottom: 1rem;">💬</div>
+        <h3 style="color: #fff; margin-bottom: 0.5rem;">Status e Link Direto de WhatsApp</h3>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Abertura instantânea da conversa no WhatsApp com mensagens personalizadas pré-configuradas para abordagem comercial consultiva.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2.25rem; margin-bottom: 1rem;">🏢</div>
+        <h3 style="color: #fff; margin-bottom: 0.5rem;">Enriquecimento de CNPJ & Sócios</h3>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Consulte a situação cadastral, CNAE principal e quadro societário (QSA) diretamente de fontes públicas legítimas para falar com o sócio certo.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2.25rem; margin-bottom: 1rem;">📋</div>
+        <h3 style="color: #fff; margin-bottom: 0.5rem;">Mini CRM & Funil de Prospecção</h3>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Organize seus contatos em etapas (Novo, Contatado, Proposta enviada, Fechado) e registre notas para nunca mais perder um lead de vista.
+        </p>
+      </div>
+
+      <div class="card">
+        <div style="font-size: 2.25rem; margin-bottom: 1rem;">📥</div>
+        <h3 style="color: #fff; margin-bottom: 0.5rem;">Exportação para CSV / Excel</h3>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Exporte seus leads com acentuação e caracteres brasileiros perfeitos (UTF-8 com BOM) para importar em qualquer planilha ou disparador.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section style="padding: 5rem 1.5rem; background: #080c14; border-top: 1px solid var(--border-subtle);" id="precos">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 3.5rem;">
+        <span class="badge badge-info" style="margin-bottom: 0.5rem;">Investimento Acessível</span>
+        <h2 style="font-size: 2.5rem; margin-bottom: 0.75rem;">Planos Prontos para seu Volume Comercial</h2>
+        <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto;">
+          Sem contratos de fidelidade. Cancele quando quiser. Ativação automática e imediata após o pagamento via Cakto.
+        </p>
+      </div>
+
+      <div id="landing-plans-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+        <!-- Inserido dinamicamente via JS do Supabase / CONFIG -->
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section style="padding: 4rem 1.5rem; max-width: 850px; margin: 0 auto;" id="faq">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <h2 style="font-size: 2rem; margin-bottom: 0.5rem;">Perguntas Frequentes</h2>
+      <p style="color: var(--text-secondary);">Tudo o que você precisa saber sobre o KS Leads e o uso de dados.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+      <div class="card">
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">De onde vêm os dados dos negócios?</h4>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          O KS Leads agrega informações estritamente públicas e legalmente acessíveis na internet, como diretórios abertos de empresas, dados cadastrais públicos de pessoas jurídicas (CNPJ/Receita Federal) e listagens de negócios. Respeitamos termos de uso e legislações aplicáveis.
+        </p>
+      </div>
+
+      <div class="card">
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">Como funciona o sistema de créditos?</h4>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Cada busca realizada com sucesso consome 1 crédito do seu saldo. Os créditos do plano renovam a cada ciclo mensal. Se precisar de volume extra, você pode adquirir recargas avulsas no painel a qualquer momento.
+        </p>
+      </div>
+
+      <div class="card">
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">O que é a distinção de Telefone Cadastral x Empresa?</h4>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Muitas empresas utilizam o telefone do escritório de contabilidade em seu registro de CNPJ (Telefone Cadastral), enquanto o telefone comercial para clientes é outro (Telefone da Empresa). O KS Leads mostra os dois separadamente para você nunca ligar no lugar errado.
+        </p>
+      </div>
+
+      <div class="card">
+        <h4 style="color: #fff; margin-bottom: 0.5rem;">Como o pagamento é confirmado?</h4>
+        <p style="font-size: 0.9rem; line-height: 1.5;">
+          Utilizamos a plataforma <strong>Cakto</strong> com processamento por webhooks seguros. Assim que seu Pix, boleto ou cartão for compensado, sua conta e créditos são liberados automaticamente sem necessidade de enviar comprovantes.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer style="background-color: #030712; border-top: 1px solid var(--border-subtle); padding: 3.5rem 1.5rem 2rem;">
+    <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2rem; margin-bottom: 3rem;">
+      <div>
+        <a href="/" class="brand-logo" style="margin-bottom: 1rem;">
+          KS <span>LEADS</span>
+        </a>
+        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+          Plataforma de inteligência comercial e prospecção de negócios para venda de sites e serviços digitais.
+        </p>
+      </div>
+
+      <div>
+        <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 1rem;">Plataforma</strong>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+          <li><a href="/login.html" style="color: var(--text-secondary);">Acessar Painel</a></li>
+          <li><a href="/cadastro.html" style="color: var(--text-secondary);">Criar Conta</a></li>
+          <li><a href="#precos" style="color: var(--text-secondary);">Tabela de Planos</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 1rem;">Conformidade & Legal</strong>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+          <li><a href="/privacidade.html" style="color: var(--text-secondary);">Política de Privacidade (LGPD)</a></li>
+          <li><a href="/termos.html" style="color: var(--text-secondary);">Termos de Uso</a></li>
+          <li><a href="/cookies.html" style="color: var(--text-secondary);">Política de Cookies</a></li>
+          <li><a href="javascript:void(0)" onclick="window.openCookiePreferences()" style="color: var(--text-secondary);">Gerenciar Cookies</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <strong style="color: #fff; font-size: 0.9rem; display: block; margin-bottom: 1rem;">Atendimento Direto</strong>
+        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+          Dúvidas comerciais ou suporte técnico via WhatsApp:
+        </p>
+        <a id="btn-footer-whatsapp" href="#" target="_blank" class="btn btn-outline btn-sm">
+          💬 +55 19 97801-3794
+        </a>
+      </div>
+    </div>
+
+    <div style="max-width: 1200px; margin: 0 auto; border-top: 1px solid var(--border-subtle); padding-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.8rem; color: var(--text-muted);">
+      <div>
+        &copy; 2026 KS Leads. Todos os direitos reservados.
+      </div>
+      <div>
+        Desenvolvido para operações de prospecção comercial por Peter.
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { CONFIG } from '/assets/js/config.js';
+    import { Utils } from '/assets/js/utils.js';
+    import { getSupabase } from '/assets/js/supabase-client.js';
+
+    document.getElementById('btn-footer-whatsapp').href = CONFIG.getWhatsAppSupportUrl();
+
+    // Carrega planos dinamicamente do Supabase (ou fallback padrão)
+    async function loadLandingPlans() {
+      const container = document.getElementById('landing-plans-container');
+      let plans = CONFIG.DEFAULT_PLANS;
+
+      try {
+        const sb = getSupabase();
+        if (sb) {
+          const { data } = await sb.from('plans').select('*').eq('is_active', true).order('display_order', { ascending: true });
+          if (data && data.length) plans = data;
+        }
+      } catch (e) {}
+
+      container.innerHTML = plans.map(p => {
+        const price = p.price_cents ? Utils.formatCurrency(p.price_cents / 100) : (p.priceFormatted || 'R$ 49,90');
+        const credits = p.credits_included || p.credits || 100;
+        const features = Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? JSON.parse(p.features) : []);
+        const checkout = p.cakto_checkout_url || p.checkoutUrl || '/cadastro.html';
+
+        return `
+          <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; ${p.badge ? 'border-color: var(--accent); position: relative;' : ''}">
+            ${p.badge ? `<span class="badge badge-info" style="position: absolute; top: -10px; right: 20px;">${p.badge}</span>` : ''}
+            <div>
+              <h4 style="font-size: 1.35rem; color: #fff; margin-bottom: 0.5rem;">${p.name}</h4>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">${p.description || 'Acesso completo ao motor de busca.'}</p>
+              
+              <div style="font-size: 2.25rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">
+                ${price}
+                <span style="font-size: 0.95rem; font-weight: 400; color: var(--text-muted);">/mês</span>
+              </div>
+              <div style="font-size: 0.9rem; font-weight: 600; color: var(--accent); margin-bottom: 1.5rem;">
+                ${credits} créditos de busca/mês
+              </div>
+
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.85rem; margin-bottom: 2rem;">
+                ${features.map(f => `
+                  <li style="display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1;">
+                    <span style="color: var(--success); font-weight: bold;">✓</span> ${f}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+
+            <div>
+              <a href="${checkout}" target="_blank" class="btn btn-primary" style="width: 100%;">
+                Contratar Agora
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    loadLandingPlans();
+  </script>
+  <script src="/assets/js/cookie-consent.js"></script>
+</body>
+</html>

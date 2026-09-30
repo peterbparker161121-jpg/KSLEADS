@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redefinir Senha — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body style="align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem; background-color: #050811;">
+  <div class="card" style="max-width: 440px; width: 100%; padding: 2.5rem 2rem; border-color: var(--border-subtle); box-shadow: var(--shadow-lg);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <a href="/" class="brand-logo" style="justify-content: center; margin-bottom: 0.75rem;">
+        KS <span>LEADS</span>
+      </a>
+      <h2 style="font-size: 1.5rem; color: #fff;">Criar Nova Senha</h2>
+      <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+        Digite sua nova senha de acesso.
+      </p>
+    </div>
+
+    <form id="form-reset-password">
+      <div class="form-group">
+        <label class="form-label" for="reset-pass">Nova Senha *</label>
+        <input type="password" id="reset-pass" class="form-input" placeholder="Mínimo 6 caracteres" minlength="6" required autofocus>
+      </div>
+
+      <button type="submit" id="btn-submit-reset" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">
+        Salvar Nova Senha & Entrar
+      </button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth } from '/assets/js/supabase-client.js';
+
+    document.getElementById('form-reset-password').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newPassword = document.getElementById('reset-pass').value;
+      const btn = document.getElementById('btn-submit-reset');
+
+      btn.disabled = true;
+      btn.textContent = 'Salvando...';
+
+      try {
+        await Auth.updatePassword(newPassword);
+        Utils.showToast('Senha alterada com sucesso! Entrando...', 'success');
+        setTimeout(() => {
+          window.location.href = '/app/';
+        }, 1200);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Salvar Nova Senha & Entrar';
+        Utils.showToast(err.message || 'Erro ao redefinir senha.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

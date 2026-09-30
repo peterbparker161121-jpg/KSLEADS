@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recuperar Senha — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body style="align-items: center; justify-content: center; min-height: 100vh; padding: 1.5rem; background-color: #050811;">
+  <div class="card" style="max-width: 440px; width: 100%; padding: 2.5rem 2rem; border-color: var(--border-subtle); box-shadow: var(--shadow-lg);">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <a href="/" class="brand-logo" style="justify-content: center; margin-bottom: 0.75rem;">
+        KS <span>LEADS</span>
+      </a>
+      <h2 style="font-size: 1.5rem; color: #fff;">Recuperar Acesso</h2>
+      <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+        Enviaremos um link de redefinição para o seu e-mail cadastrado.
+      </p>
+    </div>
+
+    <form id="form-recovery">
+      <div class="form-group">
+        <label class="form-label" for="recovery-email">Seu E-mail Cadastrado</label>
+        <input type="email" id="recovery-email" class="form-input" placeholder="exemplo@empresa.com.br" required autofocus>
+      </div>
+
+      <button type="submit" id="btn-submit-recovery" class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;">
+        Enviar Link de Recuperação
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 1.75rem; font-size: 0.875rem; color: var(--text-secondary);">
+      Lembrou sua senha? <a href="/login.html" style="color: var(--accent); font-weight: 600;">Voltar ao Login</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth } from '/assets/js/supabase-client.js';
+
+    document.getElementById('form-recovery').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('recovery-email').value.trim();
+      const btn = document.getElementById('btn-submit-recovery');
+
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+
+      try {
+        await Auth.resetPasswordForEmail(email);
+        Utils.showToast('Instruções enviadas para seu e-mail!', 'success');
+        btn.textContent = 'E-mail Enviado ✓';
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Enviar Link de Recuperação';
+        Utils.showToast(err.message || 'Erro ao solicitar redefinição.', 'error');
+      }
+    });
+  </script>
+</body>
+</html>

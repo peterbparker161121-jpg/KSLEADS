@@ -1,0 +1,24 @@
+{
+  "name": "ks-leads",
+  "version": "1.0.0",
+  "description": "KS Leads — Plataforma SaaS profissional para prospecção comercial e descoberta de leads B2B",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "npx serve . -l 3000",
+    "test": "node --check api/webhook/cakto.js && node --check api/search/leads.js && node --check api/enrich/lead.js && node --check api/admin/users.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "keywords": [
+    "saas",
+    "leads",
+    "b2b",
+    "prospeccao",
+    "vendas",
+    "supabase",
+    "cakto"
+  ],
+  "author": "Peter / KS Leads",
+  "license": "Proprietary"
+}
