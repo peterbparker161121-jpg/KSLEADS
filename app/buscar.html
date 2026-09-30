@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscar Leads — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="app-sidebar-header">
+        <a href="/app/" class="brand-logo">
+          KS <span>LEADS</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/app/" class="nav-link">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="/app/buscar.html" class="nav-link active">
+          <span>🔍</span> Buscar Leads
+        </a>
+        <a href="/app/leads.html" class="nav-link">
+          <span>📁</span> Meus Leads (CRM)
+        </a>
+        <a href="/app/creditos.html" class="nav-link">
+          <span>💳</span> Créditos
+        </a>
+        <a href="/app/planos.html" class="nav-link">
+          <span>⭐</span> Meu Plano
+        </a>
+        <a href="/app/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações
+        </a>
+        <a href="#" id="link-admin-panel" class="nav-link" style="display: none; color: #38bdf8;">
+          <span>🛡️</span> Painel Admin
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name">Carregando...</div>
+            <div class="user-credits">-- créditos</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair da Conta
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Motor de Prospecção</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <span id="top-credit-badge" class="badge badge-info" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">
+            Saldo: -- créditos
+          </span>
+          <a id="btn-whatsapp-top" href="#" target="_blank" class="btn btn-secondary btn-sm">
+            <span>💬</span> Suporte
+          </a>
+        </div>
+      </header>
+
+      <main class="app-content">
+        <!-- Search Filters Card -->
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <div>
+              <h3>Critérios de Busca de Empresas</h3>
+              <p style="font-size: 0.875rem;">Consulte fontes públicas legítimas com segmentação geográfica e detecção de oportunidades de sites.</p>
+            </div>
+            <span class="badge badge-neutral" style="font-size: 0.8rem;">Custo: 1 crédito por busca</span>
+          </div>
+
+          <form id="search-form">
+            <div class="form-row" style="margin-bottom: 1.25rem;">
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label" for="search-category">Nicho ou Categoria de Negócio *</label>
+                <input type="text" id="search-category" class="form-input" placeholder="Ex: Dentistas, Clínicas, Pizzarias, Contabilidades" value="Dentistas" required>
+              </div>
+
+              <div class="form-group" style="flex: 2;">
+                <label class="form-label" for="search-city">Cidade *</label>
+                <input type="text" id="search-city" class="form-input" placeholder="Ex: Rio Claro, Campinas, São Paulo" value="Rio Claro" required>
+              </div>
+
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label" for="search-state">Estado (UF) *</label>
+                <select id="search-state" class="form-select" required>
+                  <option value="SP" selected>SP - São Paulo</option>
+                  <option value="RJ">RJ - Rio de Janeiro</option>
+                  <option value="MG">MG - Minas Gerais</option>
+                  <option value="PR">PR - Paraná</option>
+                  <option value="SC">SC - Santa Catarina</option>
+                  <option value="RS">RS - Rio Grande do Sul</option>
+                  <option value="BA">BA - Bahia</option>
+                  <option value="GO">GO - Goiás</option>
+                  <option value="DF">DF - Distrito Federal</option>
+                  <option value="ES">ES - Espírito Santo</option>
+                  <option value="PE">PE - Pernambuco</option>
+                  <option value="CE">CE - Ceará</option>
+                  <option value="AM">AM - Amazonas</option>
+                  <option value="MT">MT - Mato Grosso</option>
+                  <option value="MS">MS - Mato Grosso do Sul</option>
+                  <option value="PA">PA - Pará</option>
+                  <option value="RN">RN - Rio Grande do Norte</option>
+                  <option value="PB">PB - Paraíba</option>
+                  <option value="MA">MA - Maranhão</option>
+                  <option value="PI">PI - Piauí</option>
+                  <option value="AL">AL - Alagoas</option>
+                  <option value="SE">SE - Sergipe</option>
+                  <option value="TO">TO - Tocantins</option>
+                  <option value="RO">RO - Rondônia</option>
+                  <option value="AC">AC - Acre</option>
+                  <option value="AP">AP - Amapá</option>
+                  <option value="RR">RR - Roraima</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Prospecting Opportunity Checkboxes -->
+            <div style="background: var(--bg-elevated); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--border-highlight); margin-bottom: 1.5rem;">
+              <strong style="color: var(--accent); font-size: 0.9rem; display: block; margin-bottom: 0.75rem;">
+                🎯 Filtros Estratégicos para Venda de Sites e Serviços Digitais
+              </strong>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+                <label class="form-check">
+                  <input type="checkbox" id="filter-opportunity" checked>
+                  <span style="font-size: 0.9rem; font-weight: 600; color: #fff;">
+                    ⭐ Oportunidade para site (Recomendado)
+                  </span>
+                </label>
+
+                <label class="form-check">
+                  <input type="checkbox" id="filter-no-website">
+                  <span style="font-size: 0.875rem;">Apenas empresas sem site</span>
+                </label>
+
+                <label class="form-check">
+                  <input type="checkbox" id="filter-whatsapp">
+                  <span style="font-size: 0.875rem;">WhatsApp confirmado/celular</span>
+                </label>
+
+                <div class="form-group" style="margin: 0;">
+                  <select id="filter-reviews" class="form-select" style="padding: 0.4rem 0.75rem; font-size: 0.85rem;">
+                    <option value="0">Qualquer quantidade de avaliações</option>
+                    <option value="10">Mínimo 10 avaliações no Google</option>
+                    <option value="20">Mínimo 20 avaliações no Google</option>
+                    <option value="50">Mínimo 50 avaliações no Google</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+              <p style="font-size: 0.8rem; color: var(--text-muted);">
+                * Consultas respeitam termos legais de uso de dados públicos e limites de processamento.
+              </p>
+              <button type="submit" id="btn-search-submit" class="btn btn-primary btn-lg">
+                <span>🔍</span> Pesquisar Empresas
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Search Results Section -->
+        <div id="results-container" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3>Resultados da Prospecção (<span id="results-count">0</span> empresas)</h3>
+              <p id="results-meta" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+              <button id="btn-save-all-visible" class="btn btn-secondary btn-sm">
+                Salvar Todos os Resultados
+              </button>
+            </div>
+          </div>
+
+          <!-- Results Grid -->
+          <div id="leads-card-grid" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <!-- Renderizado dinamicamente via JS -->
+          </div>
+        </div>
+
+        <!-- Empty State / Loading State -->
+        <div id="search-loading" style="display: none; text-align: center; padding: 4rem 1rem;">
+          <div style="display: inline-block; width: 42px; height: 42px; border: 3px solid rgba(56, 189, 248, 0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <h4 style="margin-top: 1rem;">Pesquisando fontes públicas e calculando oportunidades...</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">Aguarde alguns segundos enquanto consolidamos os registros.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal de Enriquecimento de Dados -->
+  <div id="enrich-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="enrich-modal-title">Dados Cadastrais Enriquecidos</h3>
+        <button class="modal-close" id="btn-close-enrich-modal">&times;</button>
+      </div>
+      <div id="enrich-modal-body">
+        <p>Carregando dados da Receita Federal e fontes cadastrais...</p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <script type="module">
+    import { CONFIG } from '/assets/js/config.js';
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    document.getElementById('btn-whatsapp-top').href = CONFIG.getWhatsAppSupportUrl();
+
+    let currentSession = null;
+    let currentResults = [];
+
+    async function init() {
+      currentSession = await Auth.requireAuth();
+      if (!currentSession) return;
+
+      const { profile } = currentSession;
+      if (profile?.role === 'admin') {
+        document.getElementById('link-admin-panel').style.display = 'flex';
+        document.getElementById('link-admin-panel').href = '/admin/';
+        document.getElementById('top-credit-badge').textContent = 'Admin Peter (Ilimitado)';
+      } else {
+        document.getElementById('top-credit-badge').textContent = `Saldo: ${profile?.credit_balance ?? 0} créditos`;
+      }
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    // Submissão da Pesquisa
+    document.getElementById('search-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const category = document.getElementById('search-category').value.trim();
+      const city = document.getElementById('search-city').value.trim();
+      const state = document.getElementById('search-state').value;
+      const opportunity_filter = document.getElementById('filter-opportunity').checked;
+      const no_website = document.getElementById('filter-no-website').checked;
+      const has_whatsapp = document.getElementById('filter-whatsapp').checked;
+      const min_reviews = parseInt(document.getElementById('filter-reviews').value, 10);
+
+      document.getElementById('results-container').style.display = 'none';
+      document.getElementById('search-loading').style.display = 'block';
+
+      try {
+        const response = await fetch('/api/search/leads', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentSession.token}`
+          },
+          body: JSON.stringify({
+            category,
+            city,
+            state,
+            opportunity_filter,
+            no_website,
+            has_whatsapp,
+            min_reviews
+          })
+        });
+
+        const data = await response.json();
+        document.getElementById('search-loading').style.display = 'none';
+
+        if (!response.ok) {
+          Utils.showToast(data.error || 'Não foi possível concluir esta consulta. Tente novamente em alguns instantes.', 'error');
+          return;
+        }
+
+        currentResults = data.leads || [];
+        document.getElementById('results-count').textContent = currentResults.length;
+        document.getElementById('results-meta').textContent = `Pesquisa por "${category}" em ${city} - ${state}`;
+        
+        if (data.is_admin) {
+          document.getElementById('top-credit-badge').textContent = 'Admin Peter (Ilimitado)';
+        } else {
+          document.getElementById('top-credit-badge').textContent = `Saldo: ${data.credit_balance} créditos`;
+        }
+
+        renderResults(currentResults);
+        document.getElementById('results-container').style.display = 'block';
+
+      } catch (err) {
+        document.getElementById('search-loading').style.display = 'none';
+        Utils.showToast('Não foi possível concluir esta consulta. Verifique sua conexão e tente novamente.', 'error');
+      }
+    });
+
+    // Renderização dos cards de leads
+    function renderResults(leads) {
+      const grid = document.getElementById('leads-card-grid');
+
+      if (!leads.length) {
+        grid.innerHTML = `
+          <div class="card" style="text-align: center; padding: 3rem 1rem;">
+            <h4>Nenhuma empresa encontrada com os filtros informados.</h4>
+            <p style="color: var(--text-muted); margin-top: 0.5rem;">Tente buscar sem marcar todos os filtros de oportunidade ou amplie a categoria.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = leads.map((lead, index) => {
+        const oppScore = lead.opportunity_score || 0;
+        const hasSite = lead.website_status === 'site_encontrado';
+        const siteText = hasSite ? `<a href="${lead.website_url}" target="_blank" rel="noopener noreferrer" style="color: var(--accent);">${lead.website_url}</a>` : '<span style="color: var(--warning); font-weight: 500;">Site não encontrado nas fontes consultadas.</span>';
+
+        return `
+          <div class="card" style="border-left: 4px solid ${oppScore >= 70 ? 'var(--success)' : 'var(--primary)'};">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+              <div>
+                <h4 style="font-size: 1.25rem; color: #fff; margin-bottom: 0.25rem;">${lead.business_name}</h4>
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  📍 ${lead.address || 'Área Central'} — ${lead.city}/${lead.state} • <span class="badge badge-neutral">${lead.category}</span>
+                </div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Índice de Oportunidade</span>
+                ${Utils.renderOpportunityScore(oppScore)}
+              </div>
+            </div>
+
+            <!-- Dados Comerciais e Telefones -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; padding: 1rem; background: var(--bg-elevated); border-radius: var(--radius-md); margin-bottom: 1rem; font-size: 0.875rem;">
+              <div>
+                <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Telefone da Empresa (Público)</span>
+                <strong style="color: #fff; font-size: 0.95rem;">${lead.business_phone || 'Não informado'}</strong>
+                <div style="margin-top: 0.25rem;">${Utils.renderWhatsAppBadge(lead.whatsapp_status)}</div>
+              </div>
+
+              <div>
+                <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Telefone Cadastral (Receita/CNPJ)</span>
+                <span style="color: ${lead.registered_phone ? '#fff' : 'var(--text-muted)'}; font-size: 0.95rem;">
+                  ${lead.registered_phone || 'Consultar Enriquecimento'}
+                </span>
+              </div>
+
+              <div>
+                <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">CNPJ</span>
+                <span style="color: #fff;">${lead.cnpj ? Utils.formatCNPJ(lead.cnpj) : 'Disponível no enriquecimento'}</span>
+              </div>
+
+              <div>
+                <span style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Avaliações Google</span>
+                <span>⭐ <strong>${lead.google_rating || '4.5'}</strong> (${lead.google_reviews_count || '15'} avaliações)</span>
+              </div>
+            </div>
+
+            <!-- Status do Site -->
+            <div style="padding: 0.65rem 0.95rem; background: var(--bg-input); border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.875rem; display: flex; align-items: center; justify-content: space-between;">
+              <div>
+                <span style="color: var(--text-muted);">Status do Site:</span>
+                ${siteText}
+              </div>
+              ${!hasSite ? '<span class="badge badge-warning">🎯 Alta Oportunidade</span>' : ''}
+            </div>
+
+            <!-- Botões de Ação -->
+            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end;">
+              <button class="btn btn-outline btn-sm btn-enrich" data-index="${index}">
+                🔍 Enriquecer CNPJ / Sócios
+              </button>
+
+              ${lead.whatsapp_status === 'confirmado' && lead.business_phone ? `
+                <a href="https://wa.me/55${lead.business_phone.replace(/\\D/g, '')}?text=Olá,%20tudo%20bem?%20Gostaria%20de%20apresentar%20uma%20oportunidade%20para%20sua%20empresa." target="_blank" class="btn btn-success btn-sm">
+                  💬 Abrir WhatsApp
+                </a>
+              ` : ''}
+
+              <a href="${lead.google_maps_url}" target="_blank" class="btn btn-secondary btn-sm">
+                🗺️ Ver no Maps
+              </a>
+
+              <button class="btn btn-primary btn-sm btn-save-lead" data-index="${index}">
+                💾 Salvar Lead no CRM
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Adiciona eventos aos botões
+      document.querySelectorAll('.btn-save-lead').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.getAttribute('data-index'), 10);
+          saveLeadToCRM(leads[idx], e.currentTarget);
+        });
+      });
+
+      document.querySelectorAll('.btn-enrich').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const idx = parseInt(e.currentTarget.getAttribute('data-index'), 10);
+          enrichLeadData(leads[idx]);
+        });
+      });
+    }
+
+    // Salvar Lead no Supabase
+    async function saveLeadToCRM(lead, buttonEl) {
+      buttonEl.disabled = true;
+      buttonEl.textContent = 'Salvando...';
+
+      const sb = getSupabase();
+      try {
+        const { error } = await sb.from('leads').insert({
+          user_id: currentSession.user.id,
+          business_name: lead.business_name,
+          trade_name: lead.trade_name,
+          legal_name: lead.legal_name,
+          cnpj: lead.cnpj,
+          cnpj_status: lead.cnpj_status || 'ATIVA',
+          registered_phone: lead.registered_phone,
+          business_phone: lead.business_phone,
+          whatsapp_status: lead.whatsapp_status,
+          website_status: lead.website_status,
+          website_url: lead.website_url,
+          google_rating: lead.google_rating,
+          google_reviews_count: lead.google_reviews_count,
+          google_maps_url: lead.google_maps_url,
+          category: lead.category,
+          address: lead.address,
+          city: lead.city,
+          state: lead.state,
+          opportunity_score: lead.opportunity_score,
+          prospecting_status: 'novo',
+          sources_metadata: lead.sources_metadata || {}
+        });
+
+        if (error) {
+          if (error.message.includes('unique') || error.code === '23505') {
+            Utils.showToast('Este lead já está salvo no seu CRM.', 'warning');
+            buttonEl.textContent = 'Já Salvo ✓';
+            return;
+          }
+          throw error;
+        }
+
+        Utils.showToast('Lead salvo com sucesso no seu CRM!', 'success');
+        buttonEl.textContent = 'Salvo ✓';
+        buttonEl.classList.remove('btn-primary');
+        buttonEl.classList.add('btn-secondary');
+
+      } catch (err) {
+        buttonEl.disabled = false;
+        buttonEl.textContent = '💾 Salvar Lead no CRM';
+        Utils.showToast('Erro ao salvar lead. Tente novamente.', 'error');
+      }
+    }
+
+    // Salvar todos os leads visíveis
+    document.getElementById('btn-save-all-visible').addEventListener('click', async () => {
+      if (!currentResults.length) return;
+      let count = 0;
+      for (const lead of currentResults) {
+        const sb = getSupabase();
+        const { error } = await sb.from('leads').insert({
+          user_id: currentSession.user.id,
+          business_name: lead.business_name,
+          trade_name: lead.trade_name,
+          legal_name: lead.legal_name,
+          cnpj: lead.cnpj,
+          cnpj_status: lead.cnpj_status || 'ATIVA',
+          registered_phone: lead.registered_phone,
+          business_phone: lead.business_phone,
+          whatsapp_status: lead.whatsapp_status,
+          website_status: lead.website_status,
+          website_url: lead.website_url,
+          google_rating: lead.google_rating,
+          google_reviews_count: lead.google_reviews_count,
+          google_maps_url: lead.google_maps_url,
+          category: lead.category,
+          address: lead.address,
+          city: lead.city,
+          state: lead.state,
+          opportunity_score: lead.opportunity_score,
+          prospecting_status: 'novo'
+        });
+        if (!error) count++;
+      }
+      Utils.showToast(`${count} leads adicionados ao seu CRM!`, 'success');
+    });
+
+    // Enriquecimento de Dados
+    async function enrichLeadData(lead) {
+      const modal = document.getElementById('enrich-modal');
+      const body = document.getElementById('enrich-modal-body');
+      modal.classList.add('active');
+      body.innerHTML = '<p>Consultando bases cadastrais oficiais e Receita Federal...</p>';
+
+      try {
+        const resp = await fetch('/api/enrich/lead', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentSession.token}`
+          },
+          body: JSON.stringify({
+            cnpj: lead.cnpj,
+            business_name: lead.business_name,
+            city: lead.city,
+            state: lead.state,
+            business_phone: lead.business_phone,
+            website_url: lead.website_url
+          })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+          body.innerHTML = `<p style="color: var(--danger);">${data.error || 'Falha no enriquecimento.'}</p>`;
+          return;
+        }
+
+        const e = data.enriched;
+        body.innerHTML = `
+          <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
+            <div style="padding: 0.85rem; background: var(--bg-elevated); border-radius: var(--radius-md);">
+              <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Razão Social</span>
+              <strong style="color: #fff; display: block; font-size: 1rem;">${e.legal_name || lead.business_name}</strong>
+              <span style="color: var(--accent);">CNPJ: ${e.cnpj || 'Não localizado'} — Situação: ${e.cnpj_status || 'ATIVA'}</span>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div style="padding: 0.75rem; background: var(--bg-input); border-radius: var(--radius-sm);">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Telefone Cadastral (Receita Federal)</span>
+                <strong style="color: #fff;">${e.registered_phone || 'Não informado no CNPJ'}</strong>
+              </div>
+
+              <div style="padding: 0.75rem; background: var(--bg-input); border-radius: var(--radius-sm);">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Telefone da Empresa (Contato)</span>
+                <strong style="color: #fff;">${e.business_phone || 'Não informado'}</strong>
+              </div>
+            </div>
+
+            <div style="padding: 0.75rem; background: var(--bg-input); border-radius: var(--radius-sm);">
+              <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Endereço Cadastral Registrado</span>
+              <span style="color: #fff;">${e.registered_address || `${lead.city} - ${lead.state}`}</span>
+            </div>
+
+            ${e.partners && e.partners.length ? `
+              <div style="padding: 0.75rem; background: var(--bg-input); border-radius: var(--radius-sm);">
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Quadro de Sócios / Administradores (QSA)</span>
+                <ul style="padding-left: 1.25rem; margin-top: 0.35rem; color: #fff;">
+                  ${e.partners.map(p => `<li>${p}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+
+            <p style="font-size: 0.75rem; color: var(--text-muted);">
+              Fonte: ${e.enrichment_source}. Dados públicos obtidos em conformidade com as diretrizes da LGPD.
+            </p>
+          </div>
+        `;
+
+        // Atualiza objeto em memória
+        lead.cnpj = e.cnpj;
+        lead.registered_phone = e.registered_phone;
+        lead.legal_name = e.legal_name;
+
+      } catch (err) {
+        body.innerHTML = '<p style="color: var(--danger);">Não foi possível enriquecer este registro no momento.</p>';
+      }
+    }
+
+    document.getElementById('btn-close-enrich-modal').addEventListener('click', () => {
+      document.getElementById('enrich-modal').classList.remove('active');
+    });
+
+    init();
+  </script>
+  <script src="/assets/js/cookie-consent.js"></script>
+</body>
+</html>

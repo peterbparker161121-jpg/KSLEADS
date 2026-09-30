@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assinatura Pendente — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body style="align-items: center; justify-content: center; min-height: 100vh; padding: 2rem;">
+  <div class="card" style="max-width: 540px; width: 100%; text-align: center; padding: 2.5rem; border-color: rgba(245, 158, 11, 0.4);">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+    <h2 style="color: #fff; margin-bottom: 0.75rem;">Assinatura Pendente</h2>
+    <p style="font-size: 1.05rem; color: #cbd5e1; margin-bottom: 1.5rem; line-height: 1.5;">
+      Sua assinatura está pendente. Regularize o pagamento para continuar utilizando o KS Leads.
+    </p>
+
+    <div style="padding: 1rem; background: var(--bg-elevated); border-radius: var(--radius-md); font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 2rem; text-align: left;">
+      🔒 <strong>Seus dados continuam seguros:</strong> Seus leads salvos, anotações de clientes e histórico de prospecção foram preservados e serão liberados imediatamente após a confirmação do pagamento.
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+      <a href="/app/planos.html" class="btn btn-primary btn-lg">
+        Regularizar Pagamento
+      </a>
+      <a id="btn-blocked-support" href="#" target="_blank" class="btn btn-outline">
+        💬 Falar com Suporte no WhatsApp
+      </a>
+      <button id="btn-logout" class="btn btn-outline btn-sm" style="margin-top: 1rem; border: none; color: var(--text-muted);">
+        Sair da Conta
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { CONFIG } from '/assets/js/config.js';
+    import { Auth } from '/assets/js/supabase-client.js';
+
+    document.getElementById('btn-blocked-support').href = CONFIG.getWhatsAppSupportUrl('Olá! Minha assinatura do KS Leads está com pagamento pendente e gostaria de regularizar.');
+    document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+  </script>
+</body>
+</html>

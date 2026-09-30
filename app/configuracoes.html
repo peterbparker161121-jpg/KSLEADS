@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações da Conta — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="app-sidebar-header">
+        <a href="/app/" class="brand-logo">
+          KS <span>LEADS</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/app/" class="nav-link">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="/app/buscar.html" class="nav-link">
+          <span>🔍</span> Buscar Leads
+        </a>
+        <a href="/app/leads.html" class="nav-link">
+          <span>📁</span> Meus Leads (CRM)
+        </a>
+        <a href="/app/creditos.html" class="nav-link">
+          <span>💳</span> Créditos
+        </a>
+        <a href="/app/planos.html" class="nav-link">
+          <span>⭐</span> Meu Plano
+        </a>
+        <a href="/app/configuracoes.html" class="nav-link active">
+          <span>⚙️</span> Configurações
+        </a>
+        <a href="#" id="link-admin-panel" class="nav-link" style="display: none; color: #38bdf8;">
+          <span>🛡️</span> Painel Admin
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name">Carregando...</div>
+            <div class="user-credits">-- créditos</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair da Conta
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Configurações & Privacidade</h2>
+        </div>
+      </header>
+
+      <main class="app-content" style="max-width: 900px;">
+        <!-- Profile Data Form -->
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <h3>Dados do Perfil</h3>
+          </div>
+          <form id="profile-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="profile-name">Nome Completo</label>
+                <input type="text" id="profile-name" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="profile-email">E-mail (Login)</label>
+                <input type="email" id="profile-email" class="form-input" disabled>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="profile-phone">WhatsApp para Avisos</label>
+              <input type="text" id="profile-phone" class="form-input" placeholder="(19) 99999-9999">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm">Salvar Alterações</button>
+          </form>
+        </div>
+
+        <!-- Security / Password -->
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <h3>Segurança da Conta</h3>
+          </div>
+          <form id="password-form">
+            <div class="form-group">
+              <label class="form-label" for="new-password">Nova Senha</label>
+              <input type="password" id="new-password" class="form-input" placeholder="Mínimo 6 caracteres" minlength="6" required>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">Atualizar Senha</button>
+          </form>
+        </div>
+
+        <!-- LGPD & Privacy Controls -->
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <h3>Privacidade & Direitos do Titular (LGPD)</h3>
+            <span class="badge badge-neutral">Lei 13.709/2018</span>
+          </div>
+          <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+            Você tem total controle sobre suas informações cadastrais e dados comerciais armazenados no KS Leads.
+          </p>
+
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-elevated); border-radius: var(--radius-md);">
+              <div>
+                <strong style="color: #fff; display: block;">Exportar Todos os Meus Dados</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Baixe um arquivo JSON contendo seu perfil, leads salvos e extratos.</span>
+              </div>
+              <button id="btn-export-lgpd" class="btn btn-outline btn-sm">Baixar Dados</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--bg-elevated); border-radius: var(--radius-md);">
+              <div>
+                <strong style="color: #fff; display: block;">Preferências de Cookies</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Ajuste o consentimento de cookies analíticos e navegação.</span>
+              </div>
+              <button id="btn-open-cookie-settings" class="btn btn-outline btn-sm">Gerenciar</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md);">
+              <div>
+                <strong style="color: var(--danger); display: block;">Exclusão Definitiva da Conta</strong>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Solicite a remoção permanente de sua conta e leads sob os termos da LGPD.</span>
+              </div>
+              <button id="btn-request-delete" class="btn btn-outline btn-sm" style="color: var(--danger); border-color: var(--danger);">Solicitar Exclusão</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Support Info -->
+        <div class="card" style="text-align: center; padding: 2rem;">
+          <h4>Precisa de Suporte Comercial ou Técnico?</h4>
+          <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0.5rem 0 1.25rem 0;">
+            Atendimento direto via WhatsApp com nossa equipe: <strong style="color: #fff;">+55 19 97801-3794</strong>
+          </p>
+          <a id="btn-support-link" href="#" target="_blank" class="btn btn-success">
+            💬 Conversar com o Suporte
+          </a>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { CONFIG } from '/assets/js/config.js';
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    document.getElementById('btn-support-link').href = CONFIG.getWhatsAppSupportUrl();
+    document.getElementById('btn-open-cookie-settings').addEventListener('click', () => {
+      if (window.openCookiePreferences) window.openCookiePreferences();
+    });
+
+    let currentSession = null;
+
+    async function init() {
+      currentSession = await Auth.requireAuth();
+      if (!currentSession) return;
+
+      const { user, profile } = currentSession;
+      const sb = getSupabase();
+
+      if (profile?.role === 'admin') {
+        document.getElementById('link-admin-panel').style.display = 'flex';
+        document.getElementById('link-admin-panel').href = '/admin/';
+      }
+
+      document.getElementById('profile-name').value = profile?.full_name || '';
+      document.getElementById('profile-email').value = profile?.email || user.email;
+      document.getElementById('profile-phone').value = profile?.phone || '';
+
+      // Atualizar Perfil
+      document.getElementById('profile-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fullName = document.getElementById('profile-name').value.trim();
+        const phone = document.getElementById('profile-phone').value.trim();
+
+        const { error } = await sb
+          .from('profiles')
+          .update({
+            full_name: fullName,
+            phone: phone,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+
+        if (error) {
+          Utils.showToast('Erro ao salvar alterações.', 'error');
+          return;
+        }
+
+        Utils.showToast('Perfil atualizado com sucesso!', 'success');
+      });
+
+      // Atualizar Senha
+      document.getElementById('password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newPass = document.getElementById('new-password').value;
+        try {
+          await Auth.updatePassword(newPass);
+          Utils.showToast('Senha alterada com sucesso!', 'success');
+          document.getElementById('new-password').value = '';
+        } catch (err) {
+          Utils.showToast(err.message, 'error');
+        }
+      });
+
+      // Exportação LGPD
+      document.getElementById('btn-export-lgpd').addEventListener('click', async () => {
+        const { data: leads } = await sb.from('leads').select('*').eq('user_id', user.id);
+        const { data: transactions } = await sb.from('credit_transactions').select('*').eq('user_id', user.id);
+
+        const exportData = {
+          usuario: profile,
+          leads: leads || [],
+          transacoes_credito: transactions || [],
+          data_exportacao: new Date().toISOString()
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `dados-pessoais-ks-leads-${user.id}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        Utils.showToast('Download dos seus dados iniciado.', 'success');
+      });
+
+      // Solicitação de Exclusão LGPD
+      document.getElementById('btn-request-delete').addEventListener('click', async () => {
+        if (!confirm('Tem certeza de que deseja solicitar a exclusão da sua conta? Isso removerá permanentemente seus leads salvos e histórico.')) {
+          return;
+        }
+
+        await sb.from('data_requests').insert({
+          user_id: user.id,
+          request_type: 'delete',
+          status: 'pending',
+          notes: 'Solicitação iniciada pelo usuário via painel de configurações.'
+        });
+
+        Utils.showToast('Sua solicitação de exclusão foi registrada. Nossa equipe entrará em contato.', 'info');
+      });
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    init();
+  </script>
+  <script src="/assets/js/cookie-consent.js"></script>
+</body>
+</html>

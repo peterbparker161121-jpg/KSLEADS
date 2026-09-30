@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créditos & Extrato — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="app-sidebar-header">
+        <a href="/app/" class="brand-logo">
+          KS <span>LEADS</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/app/" class="nav-link">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="/app/buscar.html" class="nav-link">
+          <span>🔍</span> Buscar Leads
+        </a>
+        <a href="/app/leads.html" class="nav-link">
+          <span>📁</span> Meus Leads (CRM)
+        </a>
+        <a href="/app/creditos.html" class="nav-link active">
+          <span>💳</span> Créditos
+        </a>
+        <a href="/app/planos.html" class="nav-link">
+          <span>⭐</span> Meu Plano
+        </a>
+        <a href="/app/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações
+        </a>
+        <a href="#" id="link-admin-panel" class="nav-link" style="display: none; color: #38bdf8;">
+          <span>🛡️</span> Painel Admin
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name">Carregando...</div>
+            <div class="user-credits">-- créditos</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair da Conta
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Extrato & Recarga de Créditos</h2>
+        </div>
+      </header>
+
+      <main class="app-content">
+        <!-- Balance Card -->
+        <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #0f172a 0%, #172554 100%); border-color: var(--border-highlight);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+            <div>
+              <span style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 600;">Seu Saldo Atual</span>
+              <h1 id="user-balance-display" style="font-size: 2.5rem; color: #fff; margin: 0.25rem 0;">--</h1>
+              <p style="font-size: 0.9rem;">Cada busca com resultados consome apenas 1 crédito. Consultas com enriquecimento avançado são contabilizadas de forma transparente.</p>
+            </div>
+            <div>
+              <a href="#recargas" class="btn btn-primary btn-lg">Comprar Mais Créditos</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pacotes de Recarga Avulsa Cakto -->
+        <div id="recargas" style="margin-bottom: 2.5rem;">
+          <h3 style="margin-bottom: 1.25rem;">Pacotes de Recarga Imediata (Cakto)</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem;">
+            <div class="card" style="text-align: center;">
+              <h4 style="color: var(--accent);">Recarga Básica</h4>
+              <div style="font-size: 2rem; font-weight: 800; color: #fff; margin: 0.75rem 0;">100 <span style="font-size: 1rem; font-weight: 400; color: var(--text-secondary);">créditos</span></div>
+              <p style="font-size: 1.25rem; font-weight: 700; color: var(--success); margin-bottom: 1rem;">R$ 29,90</p>
+              <a href="https://cakto.com.br/checkout/ksleads-recarga-100" target="_blank" class="btn btn-primary" style="width: 100%;">
+                Recarregar 100 Créditos
+              </a>
+            </div>
+
+            <div class="card" style="text-align: center; border-color: var(--accent); position: relative;">
+              <span class="badge badge-info" style="position: absolute; top: -10px; right: 20px;">Melhor Custo-Benefício</span>
+              <h4 style="color: var(--accent);">Recarga Comercial</h4>
+              <div style="font-size: 2rem; font-weight: 800; color: #fff; margin: 0.75rem 0;">300 <span style="font-size: 1rem; font-weight: 400; color: var(--text-secondary);">créditos</span></div>
+              <p style="font-size: 1.25rem; font-weight: 700; color: var(--success); margin-bottom: 1rem;">R$ 69,90</p>
+              <a href="https://cakto.com.br/checkout/ksleads-recarga-300" target="_blank" class="btn btn-primary" style="width: 100%;">
+                Recarregar 300 Créditos
+              </a>
+            </div>
+
+            <div class="card" style="text-align: center;">
+              <h4 style="color: var(--accent);">Recarga Volume</h4>
+              <div style="font-size: 2rem; font-weight: 800; color: #fff; margin: 0.75rem 0;">1.000 <span style="font-size: 1rem; font-weight: 400; color: var(--text-secondary);">créditos</span></div>
+              <p style="font-size: 1.25rem; font-weight: 700; color: var(--success); margin-bottom: 1rem;">R$ 149,90</p>
+              <a href="https://cakto.com.br/checkout/ksleads-recarga-1000" target="_blank" class="btn btn-primary" style="width: 100%;">
+                Recarregar 1.000 Créditos
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ledger / Extrato de Transações -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Histórico de Transações de Crédito</h3>
+            <span class="badge badge-neutral">Auditoria Transparente</span>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data e Hora</th>
+                  <th>Operação / Descrição</th>
+                  <th>Quantidade</th>
+                  <th>Saldo Resultante</th>
+                </tr>
+              </thead>
+              <tbody id="ledger-table-body">
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem;">
+                    Carregando extrato de créditos...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    async function init() {
+      const sessionData = await Auth.requireAuth();
+      if (!sessionData) return;
+
+      const { user, profile } = sessionData;
+      const sb = getSupabase();
+
+      if (profile?.role === 'admin') {
+        document.getElementById('link-admin-panel').style.display = 'flex';
+        document.getElementById('link-admin-panel').href = '/admin/';
+        document.getElementById('user-balance-display').textContent = 'Ilimitado (Administrador Peter)';
+      } else {
+        document.getElementById('user-balance-display').textContent = `${profile?.credit_balance ?? 0} créditos`;
+      }
+
+      // Busca transações de créditos
+      const { data: transactions, error } = await sb
+        .from('credit_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      const tbody = document.getElementById('ledger-table-body');
+      if (!transactions || transactions.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2.5rem 1rem;">
+              Nenhuma movimentação de crédito registrada ainda.
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = transactions.map(t => {
+          const isPositive = t.amount > 0;
+          return `
+            <tr>
+              <td>${Utils.formatDateTime(t.created_at)}</td>
+              <td>
+                <strong style="color: #fff;">${t.description}</strong>
+              </td>
+              <td>
+                <span style="font-weight: 700; color: ${isPositive ? 'var(--success)' : 'var(--danger)'};">
+                  ${isPositive ? `+${t.amount}` : t.amount} créditos
+                </span>
+              </td>
+              <td>
+                <strong>${t.balance_after}</strong> créditos
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    init();
+  </script>
+  <script src="/assets/js/cookie-consent.js"></script>
+</body>
+</html>

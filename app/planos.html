@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Plano & Assinatura — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="app-sidebar-header">
+        <a href="/app/" class="brand-logo">
+          KS <span>LEADS</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/app/" class="nav-link">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="/app/buscar.html" class="nav-link">
+          <span>🔍</span> Buscar Leads
+        </a>
+        <a href="/app/leads.html" class="nav-link">
+          <span>📁</span> Meus Leads (CRM)
+        </a>
+        <a href="/app/creditos.html" class="nav-link">
+          <span>💳</span> Créditos
+        </a>
+        <a href="/app/planos.html" class="nav-link active">
+          <span>⭐</span> Meu Plano
+        </a>
+        <a href="/app/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações
+        </a>
+        <a href="#" id="link-admin-panel" class="nav-link" style="display: none; color: #38bdf8;">
+          <span>🛡️</span> Painel Admin
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name">Carregando...</div>
+            <div class="user-credits">-- créditos</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair da Conta
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Planos & Assinaturas</h2>
+        </div>
+      </header>
+
+      <main class="app-content">
+        <!-- Current Plan Overview Card -->
+        <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-color: var(--border-highlight);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <span class="badge badge-info" style="margin-bottom: 0.5rem;">Sua Assinatura</span>
+              <h2 id="current-plan-name" style="color: #fff; margin-bottom: 0.25rem;">Carregando...</h2>
+              <p id="current-plan-meta" style="font-size: 0.9rem;">Consultando dados no sistema...</p>
+            </div>
+            <div>
+              <span id="current-plan-status-badge" class="badge badge-success" style="font-size: 0.9rem; padding: 0.5rem 1rem;">Ativo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plans Selection Grid -->
+        <h3 style="margin-bottom: 1.25rem;">Escolha o Plano Ideal para seu Volume de Vendas</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem;">
+          Faça upgrade a qualquer momento com cobrança transparente via <strong>Cakto</strong>. Seus créditos renovam automaticamente a cada ciclo.
+        </p>
+
+        <div id="plans-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+          <!-- Carregado dinamicamente do Supabase -->
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { CONFIG } from '/assets/js/config.js';
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    async function init() {
+      const sessionData = await Auth.requireAuth();
+      if (!sessionData) return;
+
+      const { user, profile } = sessionData;
+      const sb = getSupabase();
+
+      if (profile?.role === 'admin') {
+        document.getElementById('link-admin-panel').style.display = 'flex';
+        document.getElementById('link-admin-panel').href = '/admin/';
+        document.getElementById('current-plan-name').textContent = 'Plano Proprietário — Peter (Admin)';
+        document.getElementById('current-plan-meta').textContent = 'Uso irrestrito de créditos, buscas e enriquecimento de dados.';
+        document.getElementById('current-plan-status-badge').textContent = 'Acesso Ilimitado Vitalício';
+      } else {
+        const planName = profile?.plans?.name || 'Trial (Período de Testes)';
+        document.getElementById('current-plan-name').textContent = planName;
+        document.getElementById('current-plan-meta').textContent = `Status: ${profile?.subscription_status === 'active' ? 'Assinatura Ativa' : 'Período Gratuito'} • Saldo: ${profile?.credit_balance ?? 0} créditos`;
+      }
+
+      // Busca todos os planos ativos cadastrados no Supabase
+      let plans = [];
+      const { data: dbPlans } = await sb
+        .from('plans')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (dbPlans && dbPlans.length > 0) {
+        plans = dbPlans;
+      } else {
+        // Fallback visual caso banco ainda não tenha rodado seed
+        plans = CONFIG.DEFAULT_PLANS;
+      }
+
+      const grid = document.getElementById('plans-grid');
+      grid.innerHTML = plans.map(p => {
+        const isCurrent = profile?.current_plan_id === p.id;
+        const priceFormatted = p.price_cents ? Utils.formatCurrency(p.price_cents / 100) : (p.priceFormatted || 'R$ 49,90');
+        const features = Array.isArray(p.features) ? p.features : (typeof p.features === 'string' ? JSON.parse(p.features) : []);
+
+        return `
+          <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; border-color: ${isCurrent ? 'var(--accent)' : 'var(--border-subtle)'};">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                <h4 style="font-size: 1.35rem; color: #fff;">${p.name}</h4>
+                ${isCurrent ? '<span class="badge badge-info">Plano Atual</span>' : ''}
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;">${p.description || ''}</p>
+              
+              <div style="font-size: 2.25rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem;">
+                ${priceFormatted}
+                <span style="font-size: 0.95rem; font-weight: 400; color: var(--text-muted);">/mês</span>
+              </div>
+              <div style="font-size: 0.9rem; font-weight: 600; color: var(--accent); margin-bottom: 1.5rem;">
+                ${p.credits_included || p.credits} créditos mensais inclusos
+              </div>
+
+              <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.65rem; font-size: 0.875rem; margin-bottom: 2rem;">
+                ${features.map(f => `
+                  <li style="display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1;">
+                    <span style="color: var(--success); font-weight: bold;">✓</span> ${f}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+
+            <div>
+              ${isCurrent ? `
+                <button class="btn btn-secondary" style="width: 100%;" disabled>
+                  Plano Ativo
+                </button>
+              ` : `
+                <a href="${p.cakto_checkout_url || p.checkoutUrl || '#'}" target="_blank" class="btn btn-primary" style="width: 100%;">
+                  Assinar com Cakto
+                </a>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    init();
+  </script>
+  <script src="/assets/js/cookie-consent.js"></script>
+</body>
+</html>

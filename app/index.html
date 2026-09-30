@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="app-sidebar-header">
+        <a href="/app/" class="brand-logo">
+          KS <span>LEADS</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/app/" class="nav-link active">
+          <span>📊</span> Dashboard
+        </a>
+        <a href="/app/buscar.html" class="nav-link">
+          <span>🔍</span> Buscar Leads
+        </a>
+        <a href="/app/leads.html" class="nav-link">
+          <span>📁</span> Meus Leads (CRM)
+        </a>
+        <a href="/app/creditos.html" class="nav-link">
+          <span>💳</span> Créditos
+        </a>
+        <a href="/app/planos.html" class="nav-link">
+          <span>⭐</span> Meu Plano
+        </a>
+        <a href="/app/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações
+        </a>
+        <a href="#" id="link-admin-panel" class="nav-link" style="display: none; color: #38bdf8;">
+          <span>🛡️</span> Painel Admin
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar">U</div>
+          <div class="user-info">
+            <div class="user-name">Carregando...</div>
+            <div class="user-credits">-- créditos</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair da Conta
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Visão Geral</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <a href="/app/buscar.html" class="btn btn-primary btn-sm">
+            <span>+</span> Nova Prospecção
+          </a>
+          <a id="btn-whatsapp-top" href="#" target="_blank" class="btn btn-secondary btn-sm" title="Suporte">
+            <span>💬</span> Suporte
+          </a>
+        </div>
+      </header>
+
+      <main class="app-content">
+        <!-- Welcome Hero -->
+        <div class="card" style="margin-bottom: 2rem; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-color: var(--border-highlight);">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h1 style="font-size: 1.75rem; margin-bottom: 0.5rem;">Olá, <span id="dash-user-name">Prospector</span>!</h1>
+              <p style="font-size: 0.95rem;">Pronto para encontrar empresas que precisam do seu trabalho e fechar novos clientes hoje?</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+              <a href="/app/buscar.html" class="btn btn-primary">Buscar Oportunidades</a>
+              <a href="/app/leads.html" class="btn btn-secondary">Acessar CRM</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+          <div class="card">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">Saldo de Créditos</div>
+            <div id="stat-credits" style="font-size: 2rem; font-weight: 800; color: var(--accent);">--</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+              <a href="/app/creditos.html" style="color: #60a5fa;">Recarregar ou ver histórico &rarr;</a>
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">Leads Salvos</div>
+            <div id="stat-saved-leads" style="font-size: 2rem; font-weight: 800; color: #ffffff;">--</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">Em seu pipeline de vendas</div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">Plano Atual</div>
+            <div id="stat-plan-name" style="font-size: 1.5rem; font-weight: 800; color: var(--success);">-</div>
+            <div id="stat-sub-status" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">Status: Ativo</div>
+          </div>
+
+          <div class="card">
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; text-transform: uppercase; font-weight: 600;">Oportunidades em Aberto</div>
+            <div id="stat-opp-leads" style="font-size: 2rem; font-weight: 800; color: var(--warning);">--</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">Empresas ativas sem site</div>
+          </div>
+        </div>
+
+        <!-- Recent Leads & Quick Actions -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: start;">
+          <div class="card">
+            <div class="card-header">
+              <h3>Leads Recentes Salvos</h3>
+              <a href="/app/leads.html" style="font-size: 0.85rem; color: var(--accent);">Ver todos &rarr;</a>
+            </div>
+            
+            <div id="recent-leads-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Carregando seus leads...</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Dicas de Prospecção</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1rem; font-size: 0.9rem;">
+              <div style="padding: 0.85rem; background: var(--bg-elevated); border-radius: var(--radius-md); border-left: 3px solid var(--accent);">
+                <strong style="color: #fff; display: block; margin-bottom: 0.25rem;">Priorize empresas com avaliações</strong>
+                Empresas com 20+ avaliações no Google já possuem clientes fiéis e caixa para investir em um site profissional.
+              </div>
+              <div style="padding: 0.85rem; background: var(--bg-elevated); border-radius: var(--radius-md); border-left: 3px solid var(--success);">
+                <strong style="color: #fff; display: block; margin-bottom: 0.25rem;">WhatsApp confirmado</strong>
+                Aborde com uma mensagem consultiva apresentando uma prévia de layout personalizada para o negócio.
+              </div>
+              <a id="btn-support-card" href="#" target="_blank" class="btn btn-outline btn-sm" style="width: 100%;">
+                💬 Dúvidas? Fale com nosso time
+              </a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { CONFIG } from '/assets/js/config.js';
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    document.getElementById('btn-whatsapp-top').href = CONFIG.getWhatsAppSupportUrl();
+    document.getElementById('btn-support-card').href = CONFIG.getWhatsAppSupportUrl();
+
+    // Responsividade botão menu mobile
+    if (window.innerWidth <= 900) {
+      const btnToggle = document.getElementById('btn-toggle-sidebar');
+      btnToggle.style.display = 'inline-flex';
+      btnToggle.addEventListener('click', () => {
+        document.getElementById('app-sidebar').classList.toggle('open');
+      });
+    }
+
+    async function initDashboard() {
+      const sessionData = await Auth.requireAuth();
+      if (!sessionData) return;
+
+      const { user, profile } = sessionData;
+      const sb = getSupabase();
+
+      // Exibe link admin se for admin
+      if (profile && profile.role === 'admin') {
+        document.getElementById('link-admin-panel').style.display = 'flex';
+        document.getElementById('link-admin-panel').href = '/admin/';
+      }
+
+      document.getElementById('dash-user-name').textContent = profile?.full_name || user.email.split('@')[0];
+      
+      // Saldo e Plano
+      if (profile?.role === 'admin') {
+        document.getElementById('stat-credits').textContent = 'Ilimitado';
+        document.getElementById('stat-plan-name').textContent = 'Administrador Peter';
+        document.getElementById('stat-sub-status').textContent = 'Acesso Total Permanente';
+      } else {
+        document.getElementById('stat-credits').textContent = profile?.credit_balance ?? 0;
+        document.getElementById('stat-plan-name').textContent = profile?.plans?.name || 'Trial Gratuito';
+        document.getElementById('stat-sub-status').textContent = `Assinatura: ${profile?.subscription_status === 'active' ? 'Ativa' : 'Período de Testes'}`;
+      }
+
+      // Consulta métricas de leads salvos
+      const { data: leads, error } = await sb
+        .from('leads')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (leads) {
+        document.getElementById('stat-saved-leads').textContent = leads.length;
+        const oppCount = leads.filter(l => l.website_status === 'site_nao_encontrado').length;
+        document.getElementById('stat-opp-leads').textContent = oppCount;
+
+        const listEl = document.getElementById('recent-leads-list');
+        if (leads.length === 0) {
+          listEl.innerHTML = `
+            <div style="text-align: center; padding: 2rem 1rem;">
+              <p style="color: var(--text-muted); margin-bottom: 1rem;">Você ainda não salvou nenhum lead.</p>
+              <a href="/app/buscar.html" class="btn btn-primary btn-sm">Fazer Primeira Busca</a>
+            </div>
+          `;
+        } else {
+          listEl.innerHTML = leads.slice(0, 5).map(lead => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem; background: var(--bg-elevated); border-radius: var(--radius-md);">
+              <div>
+                <strong style="color: var(--text-main); font-size: 0.95rem; display: block;">${lead.business_name}</strong>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">${lead.city} - ${lead.state} • ${lead.category || 'Comércio/Serviço'}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                ${Utils.renderOpportunityScore(lead.opportunity_score)}
+                <a href="/app/leads.html?id=${lead.id}" class="btn btn-outline btn-sm">Ver</a>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    initDashboard();
+  </script>
+  <script src="/assets/js/cookie-consent.js"></script>
+</body>
+</html>
