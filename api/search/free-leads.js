@@ -1,107 +1,173 @@
 /**
- * KS Leads — Motor de busca gratuita
- * Backend server-side para evitar CORS.
+ * KS LEADS
+ * Motor de descoberta gratuita de empresas
  *
- * Fontes:
- * - Nominatim / OpenStreetMap
- * - Overpass API
+ * Não usa:
+ * - API paga
+ * - Service Role
+ * - Nominatim
+ * - Google API
  *
- * Não utiliza API paga.
- * Não gera dados fictícios.
+ * Usa somente dados públicos do OpenStreetMap
+ * através de servidores Overpass.
  */
 
 const OVERPASS_ENDPOINTS = [
-  'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
-  'https://overpass.private.coffee/api/interpreter'
-];
-
-const NOMINATIM_ENDPOINTS = [
-  'https://nominatim.openstreetmap.org/search'
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+  'https://overpass-api.de/api/interpreter'
 ];
 
 const CATEGORY_TAGS = {
   dentist: ['amenity=dentist'],
   dentista: ['amenity=dentist'],
+  dentistas: ['amenity=dentist'],
+  odonto: ['amenity=dentist'],
   odontologia: ['amenity=dentist'],
 
   restaurant: ['amenity=restaurant'],
   restaurante: ['amenity=restaurant'],
-
+  restaurantes: ['amenity=restaurant'],
   pizzaria: ['amenity=restaurant'],
-  pizza: ['amenity=restaurant'],
 
   bar: ['amenity=bar'],
+  bares: ['amenity=bar'],
   pub: ['amenity=pub'],
 
   farmacia: ['amenity=pharmacy'],
   farmácia: ['amenity=pharmacy'],
+  farmacias: ['amenity=pharmacy'],
   drogaria: ['amenity=pharmacy'],
 
-  clinica: ['amenity=clinic', 'amenity=doctors'],
-  clínica: ['amenity=clinic', 'amenity=doctors'],
+  clinica: ['amenity=clinic'],
+  clínica: ['amenity=clinic'],
+  clinicas: ['amenity=clinic'],
+  clínicas: ['amenity=clinic'],
 
   medico: ['amenity=doctors'],
   médico: ['amenity=doctors'],
+  medicos: ['amenity=doctors'],
   médicos: ['amenity=doctors'],
 
   academia: ['leisure=fitness_centre'],
+  academias: ['leisure=fitness_centre'],
   fitness: ['leisure=fitness_centre'],
 
   advogado: ['office=lawyer'],
   advogada: ['office=lawyer'],
+  advogados: ['office=lawyer'],
   advocacia: ['office=lawyer'],
 
+  contabilidade: ['office=accountant'],
+  contador: ['office=accountant'],
+  contadores: ['office=accountant'],
+
+  imobiliaria: ['office=estate_agent'],
+  imobiliária: ['office=estate_agent'],
+  imobiliarias: ['office=estate_agent'],
+  imobiliárias: ['office=estate_agent'],
+
   oficina: ['shop=car_repair'],
+  oficinas: ['shop=car_repair'],
   mecanica: ['shop=car_repair'],
   mecânica: ['shop=car_repair'],
 
   cabeleireiro: ['shop=hairdresser'],
   cabeleireira: ['shop=hairdresser'],
+  cabeleireiros: ['shop=hairdresser'],
 
   barbearia: ['shop=hairdresser'],
+  barbearias: ['shop=hairdresser'],
+
+  salao: ['shop=hairdresser'],
+  salão: ['shop=hairdresser'],
+  saloes: ['shop=hairdresser'],
+  salões: ['shop=hairdresser'],
+
+  estetica: ['shop=beauty'],
+  estética: ['shop=beauty'],
+  esteticas: ['shop=beauty'],
+  estéticas: ['shop=beauty'],
 
   hotel: ['tourism=hotel'],
+  hoteis: ['tourism=hotel'],
+  hotéis: ['tourism=hotel'],
+
   pousada: ['tourism=guest_house'],
+  pousadas: ['tourism=guest_house'],
 
   mercado: ['shop=supermarket'],
+  mercados: ['shop=supermarket'],
   supermercado: ['shop=supermarket'],
+  supermercados: ['shop=supermarket'],
 
   padaria: ['shop=bakery'],
+  padarias: ['shop=bakery'],
 
   petshop: ['shop=pet'],
   pet: ['shop=pet'],
+  pets: ['shop=pet'],
 
   floricultura: ['shop=florist'],
-
-  loja: ['shop=*'],
-
-  imobiliaria: ['office=estate_agent'],
-  imobiliária: ['office=estate_agent'],
-
-  contabilidade: ['office=accountant'],
-  contador: ['office=accountant'],
-  contabilidade: ['office=accountant'],
-
-  construtora: ['office=company'],
-  arquitetura: ['office=architect'],
-  arquiteto: ['office=architect'],
+  floriculturas: ['shop=florist'],
 
   escola: ['amenity=school'],
+  escolas: ['amenity=school'],
+
   colegio: ['amenity=school'],
   colégio: ['amenity=school'],
 
   creche: ['amenity=kindergarten'],
+  creches: ['amenity=kindergarten'],
 
-  igreja: ['amenity=place_of_worship'],
+  construtora: ['office=company'],
+  construtoras: ['office=company'],
 
-  salão: ['shop=hairdresser'],
-  salao: ['shop=hairdresser'],
+  arquiteto: ['office=architect'],
+  arquiteta: ['office=architect'],
+  arquitetos: ['office=architect'],
+  arquitetura: ['office=architect'],
 
-  estética: ['shop=beauty'],
-  estetica: ['shop=beauty'],
+  fotografo: ['shop=photo'],
+  fotógrafo: ['shop=photo'],
+  fotografos: ['shop=photo'],
+  fotógrafos: ['shop=photo'],
 
-  beleza: ['shop=beauty']
+  joalheria: ['shop=jewelry'],
+  joalheria: ['shop=jewelry'],
+
+  loja: ['shop=*'],
+  lojas: ['shop=*']
+};
+
+const STATE_CODES = {
+  AC: 'Acre',
+  AL: 'Alagoas',
+  AP: 'Amapá',
+  AM: 'Amazonas',
+  BA: 'Bahia',
+  CE: 'Ceará',
+  DF: 'Distrito Federal',
+  ES: 'Espírito Santo',
+  GO: 'Goiás',
+  MA: 'Maranhão',
+  MT: 'Mato Grosso',
+  MS: 'Mato Grosso do Sul',
+  MG: 'Minas Gerais',
+  PA: 'Pará',
+  PB: 'Paraíba',
+  PR: 'Paraná',
+  PE: 'Pernambuco',
+  PI: 'Piauí',
+  RJ: 'Rio de Janeiro',
+  RN: 'Rio Grande do Norte',
+  RS: 'Rio Grande do Sul',
+  RO: 'Rondônia',
+  RR: 'Roraima',
+  SC: 'Santa Catarina',
+  SP: 'São Paulo',
+  SE: 'Sergipe',
+  TO: 'Tocantins'
 };
 
 function normalize(value) {
@@ -118,6 +184,26 @@ function escapeOverpass(value) {
     .replace(/"/g, '\\"');
 }
 
+function getStateCode(value) {
+  const text = String(value || '').toUpperCase();
+
+  const match = text.match(/\b[A-Z]{2}\b/);
+
+  if (match && STATE_CODES[match[0]]) {
+    return match[0];
+  }
+
+  const normalized = normalize(value);
+
+  for (const [code, name] of Object.entries(STATE_CODES)) {
+    if (normalize(name) === normalized) {
+      return code;
+    }
+  }
+
+  return null;
+}
+
 function getCategoryTags(category) {
   const normalized = normalize(category);
 
@@ -130,7 +216,11 @@ function getCategoryTags(category) {
   return null;
 }
 
-async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
+async function fetchWithTimeout(
+  url,
+  options = {},
+  timeoutMs = 7500
+) {
   const controller = new AbortController();
 
   const timer = setTimeout(() => {
@@ -148,152 +238,92 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = 8000) {
 }
 
 /**
- * Geocodifica cidade/estado usando Nominatim.
+ * Cria consulta Overpass.
+ *
+ * Em vez de:
+ *
+ * cidade -> Nominatim -> coordenadas -> raio de 15km
+ *
+ * fazemos:
+ *
+ * estado -> área administrativa
+ * cidade -> área administrativa
+ * empresa -> dentro da cidade
+ *
+ * Isso reduz bastante o custo da consulta.
  */
-async function geocode(city, state) {
-  const query = `${city}, ${state}, Brasil`;
+function buildQuery(city, stateCode, tags) {
+  const cityEscaped = escapeOverpass(city);
 
-  let lastError = null;
-
-  for (const endpoint of NOMINATIM_ENDPOINTS) {
-    try {
-      const url =
-        `${endpoint}?format=jsonv2` +
-        `&limit=1` +
-        `&countrycodes=br` +
-        `&q=${encodeURIComponent(query)}`;
-
-      const response = await fetchWithTimeout(
-        url,
-        {
-          headers: {
-            Accept: 'application/json',
-            'User-Agent': 'KS-Leads/1.0'
-          }
-        },
-        7000
-      );
-
-      if (!response.ok) {
-        lastError = new Error(
-          `Nominatim HTTP ${response.status}`
-        );
-        continue;
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data) || !data.length) {
-        lastError = new Error(
-          `Cidade não encontrada: ${city}/${state}`
-        );
-        continue;
-      }
-
-      const result = data[0];
-
-      const lat = Number(result.lat);
-      const lon = Number(result.lon);
-
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-        lastError = new Error(
-          'Coordenadas inválidas retornadas pelo geocodificador.'
-        );
-        continue;
-      }
-
-      return {
-        lat,
-        lon,
-        display_name: result.display_name || query
-      };
-
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw lastError || new Error(
-    'Não foi possível localizar a cidade.'
-  );
-}
-
-/**
- * Cria uma consulta Overpass.
- */
-function buildOverpassQuery(lat, lon, tags) {
-  /*
-   * 12 km de raio para reduzir tempo de processamento.
-   * O resultado é limitado a 100 elementos.
-   */
-
-  const radius = 12000;
-
-  const clauses = [];
+  const tagQueries = [];
 
   for (const tag of tags) {
-
-    if (tag.endsWith('=*')) {
-      const key = tag.slice(0, -2);
-
-      clauses.push(
-        `nwr["${escapeOverpass(key)}"](around:${radius},${lat},${lon});`
-      );
-
-      continue;
-    }
-
     const separator = tag.indexOf('=');
 
     if (separator === -1) {
       continue;
     }
 
-    const key = tag.slice(0, separator);
-    const value = tag.slice(separator + 1);
+    const key = tag.substring(0, separator);
+    const value = tag.substring(separator + 1);
 
-    clauses.push(
-      `nwr["${escapeOverpass(key)}"="${escapeOverpass(value)}"](around:${radius},${lat},${lon});`
-    );
+    if (value === '*') {
+      tagQueries.push(
+        `nwr["${escapeOverpass(key)}"](area.city)(area.state);`
+      );
+    } else {
+      tagQueries.push(
+        `nwr["${escapeOverpass(key)}"="${escapeOverpass(value)}"](area.city)(area.state);`
+      );
+    }
   }
 
-  if (!clauses.length) {
+  if (!tagQueries.length) {
     throw new Error(
-      'Categoria não possui uma fonte gratuita configurada.'
+      'Nenhum filtro válido foi encontrado para esta categoria.'
     );
   }
 
   return `
-[out:json][timeout:15];
+[out:json][timeout:8];
+
+area["boundary"="administrative"]["admin_level"="4"]["ISO3166-2"="BR-${stateCode}"]->.state;
+
+area["boundary"="administrative"]["admin_level"~"^(7|8)$"]["name"="${cityEscaped}"]->.city;
+
 (
-${clauses.join('\n')}
+  ${tagQueries.join('\n  ')}
 );
-out center tags 100;
+
+out center tags;
 `;
 }
 
 /**
  * Consulta um servidor Overpass.
  */
-async function requestOverpass(endpoint, query) {
-
+async function requestEndpoint(endpoint, query) {
   const response = await fetchWithTimeout(
     endpoint,
     {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        Accept: 'application/json',
-        'User-Agent': 'KS-Leads/1.0'
+        'Content-Type':
+          'application/x-www-form-urlencoded; charset=UTF-8',
+
+        'Accept': 'application/json',
+
+        'User-Agent':
+          'KS-Leads/1.0 (+https://ksleads.vercel.app)'
       },
       body: `data=${encodeURIComponent(query)}`
     },
-    8000
+    7500
   );
 
   if (!response.ok) {
     throw new Error(
-      `Overpass HTTP ${response.status}`
+      `${endpoint} respondeu HTTP ${response.status}`
     );
   }
 
@@ -301,7 +331,7 @@ async function requestOverpass(endpoint, query) {
 
   if (!data || !Array.isArray(data.elements)) {
     throw new Error(
-      'Resposta inválida do Overpass.'
+      `${endpoint} retornou uma resposta inválida.`
     );
   }
 
@@ -309,65 +339,70 @@ async function requestOverpass(endpoint, query) {
 }
 
 /**
- * Consulta múltiplos servidores em paralelo.
+ * Consulta os servidores em paralelo.
  *
- * Assim, se um servidor estiver lento ou fora do ar,
- * outro pode responder.
+ * O primeiro que responder corretamente ganha.
  */
-async function searchOverpass(lat, lon, tags) {
-
-  const query = buildOverpassQuery(lat, lon, tags);
-
-  const requests = OVERPASS_ENDPOINTS.map(async (endpoint) => {
-
-    try {
-
-      const elements = await requestOverpass(
+async function searchOverpass(query) {
+  const requests = OVERPASS_ENDPOINTS.map(
+    async endpoint => {
+      const elements = await requestEndpoint(
         endpoint,
         query
       );
-
-      if (!elements.length) {
-        throw new Error(
-          'Servidor respondeu sem resultados.'
-        );
-      }
 
       return {
         endpoint,
         elements
       };
-
-    } catch (error) {
-
-      throw {
-        endpoint,
-        error: error?.message || 'Erro desconhecido'
-      };
     }
-  });
+  );
 
   try {
-
-    const result = await Promise.any(requests);
-
-    return result;
-
+    return await Promise.any(requests);
   } catch (error) {
-
-    const details = Array.isArray(error?.errors)
+    const errors = Array.isArray(error?.errors)
       ? error.errors
-          .map(item => `${item.endpoint}: ${item.error}`)
+          .map(item =>
+            item?.message || String(item)
+          )
           .join(' | ')
-      : 'Nenhum servidor Overpass respondeu.';
+      : 'Todos os servidores Overpass falharam.';
 
-    throw new Error(details);
+    throw new Error(errors);
   }
 }
 
-/**
- * Handler Vercel.
- */
+function cleanElements(elements) {
+  const unique = new Map();
+
+  for (const element of elements) {
+    if (!element || !element.id) {
+      continue;
+    }
+
+    const tags = element.tags || {};
+
+    const name =
+      tags.name ||
+      tags.brand ||
+      tags.operator;
+
+    if (!name) {
+      continue;
+    }
+
+    const normalizedName = normalize(name);
+
+    if (!unique.has(normalizedName)) {
+      unique.set(normalizedName, element);
+    }
+  }
+
+  return Array.from(unique.values())
+    .slice(0, 100);
+}
+
 module.exports = async function handler(req, res) {
 
   res.setHeader(
@@ -376,12 +411,13 @@ module.exports = async function handler(req, res) {
   );
 
   if (req.method !== 'POST') {
-
     return res.status(405).json({
       success: false,
       error: 'Método não permitido.'
     });
   }
+
+  const startedAt = Date.now();
 
   try {
 
@@ -400,7 +436,6 @@ module.exports = async function handler(req, res) {
     ).trim();
 
     if (!category) {
-
       return res.status(400).json({
         success: false,
         error: 'Informe a categoria.'
@@ -408,7 +443,6 @@ module.exports = async function handler(req, res) {
     }
 
     if (!city) {
-
       return res.status(400).json({
         success: false,
         error: 'Informe a cidade.'
@@ -416,121 +450,86 @@ module.exports = async function handler(req, res) {
     }
 
     if (!state) {
-
       return res.status(400).json({
         success: false,
         error: 'Informe o estado.'
       });
     }
 
-    const tags = getCategoryTags(category);
+    const stateCode = getStateCode(state);
 
-    if (!tags) {
-
+    if (!stateCode) {
       return res.status(400).json({
         success: false,
         error:
-          `A categoria "${category}" ainda não possui um mapeamento gratuito configurado.`
+          'Estado inválido. Selecione um estado brasileiro válido.'
       });
     }
 
-    /*
-     * 1. Localiza a cidade.
-     */
-    const location = await geocode(
-      city,
-      state
-    );
+    const tags = getCategoryTags(category);
 
-    /*
-     * 2. Busca empresas reais.
-     */
-    const result = await searchOverpass(
-      location.lat,
-      location.lon,
+    if (!tags) {
+      return res.status(400).json({
+        success: false,
+        error:
+          `A categoria "${category}" ainda não possui uma categoria OSM configurada.`
+      });
+    }
+
+    const query = buildQuery(
+      city,
+      stateCode,
       tags
     );
 
-    /*
-     * 3. Remove duplicados.
-     */
-    const unique = new Map();
+    const result = await searchOverpass(
+      query
+    );
 
-    for (const element of result.elements) {
+    const elements = cleanElements(
+      result.elements
+    );
 
-      if (!element || !element.id) {
-        continue;
-      }
-
-      const tags = element.tags || {};
-
-      const name =
-        tags.name ||
-        tags.brand ||
-        tags.operator;
-
-      if (!name) {
-        continue;
-      }
-
-      const key = normalize(name);
-
-      if (!unique.has(key)) {
-        unique.set(key, element);
-      }
-    }
-
-    const elements = Array.from(
-      unique.values()
-    ).slice(0, 100);
+    console.log(
+      `[KS Leads] Busca concluída: ${category} / ${city}-${stateCode} / ${elements.length} resultados / ${Date.now() - startedAt}ms / ${result.endpoint}`
+    );
 
     return res.status(200).json({
-
       success: true,
 
       source: {
         provider: 'OpenStreetMap',
-        search_engine: 'Overpass',
-        geocoder: 'Nominatim'
+        engine: 'Overpass',
+        endpoint: result.endpoint
       },
 
       query: {
         category,
         city,
-        state
+        state: stateCode
       },
-
-      location,
 
       count: elements.length,
 
       elements
-
     });
 
   } catch (error) {
 
     console.error(
-      '[KS Leads] Free search error:',
+      '[KS Leads] ERRO REAL NA BUSCA:',
       error
     );
 
     return res.status(502).json({
-
       success: false,
 
       error:
-        'As fontes gratuitas estão temporariamente indisponíveis. Tente novamente em alguns segundos.',
+        'Não foi possível consultar as fontes gratuitas agora.',
 
-      /*
-       * Não expõe detalhes internos em produção.
-       * O erro completo fica no log da Vercel.
-       */
-      detail:
-        process.env.NODE_ENV === 'development'
-          ? String(error?.message || error)
-          : undefined
-
+      message:
+        error?.message ||
+        'Erro desconhecido na fonte de dados.'
     });
   }
 };
