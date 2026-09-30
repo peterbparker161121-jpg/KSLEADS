@@ -24,56 +24,7 @@ function formatPhoneBR(raw) {
   return raw;
 }
 
-// Gera dados de contingência realistas caso APIs públicas externas estejam indisponíveis
-function generateFallbackLeads(category, city, state, count = 8) {
-  const suffixes = ['Centro', 'Prime', 'Excelência', 'Integrada', 'Express', 'Brasil', 'Digital', 'Associados', 'VIP'];
-  const streets = ['Rua das Flores', 'Av. Presidente Vargas', 'Rua São Paulo', 'Av. Brasil', 'Rua XV de Novembro', 'Rua do Comércio'];
-  const list = [];
-
-  for (let i = 0; i < count; i++) {
-    const suffix = suffixes[i % suffixes.length];
-    const hasWebsite = i % 3 === 0; // Maioria sem site para prospecção comercial!
-    const isMobile = i % 2 === 0;
-    const phoneNum = isMobile ? `1999${i}2345${i}` : `1934${i}1234${i}`;
-    const reviews = 12 + (i * 19);
-    const rating = (4.2 + (i * 0.1) % 0.8).toFixed(1);
-
-    // Cálculo do Índice de Oportunidade
-    let score = 0;
-    if (!hasWebsite) score += 35; // Oportunidade de ouro para vender site!
-    if (isMobile) score += 25;    // WhatsApp direto!
-    if (reviews >= 20) score += 20; // Empresa com demanda e faturamento
-    score += 15; // Empresa ativa
-
-    list.push({
-      id: `lead_${Date.now()}_${i}`,
-      business_name: `${category} ${suffix}`.toUpperCase(),
-      trade_name: `${category} ${suffix}`,
-      legal_name: `${category} & ${suffix} LTDA`,
-      cnpj: `${10 + i}.345.678/0001-${90 + i}`,
-      cnpj_status: 'ATIVA',
-      registered_phone: formatPhoneBR(isMobile ? `1998${i}1234${i}` : ''),
-      business_phone: formatPhoneBR(phoneNum),
-      whatsapp_status: isMobile ? 'confirmado' : 'nao_confirmado',
-      website_status: hasWebsite ? 'site_encontrado' : 'site_nao_encontrado',
-      website_url: hasWebsite ? `https://www.exemplo${category.toLowerCase()}${i}.com.br` : null,
-      google_rating: parseFloat(rating),
-      google_reviews_count: reviews,
-      google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${category} ${suffix} ${city} ${state}`)}`,
-      category: category,
-      address: `${streets[i % streets.length]}, ${100 + i * 25}`,
-      city: city,
-      state: state.toUpperCase(),
-      opportunity_score: Math.min(score, 100),
-      sources_metadata: {
-        provider: 'KS Public Aggregator',
-        verified_date: new Date().toLocaleDateString('pt-BR'),
-        website_checked: true
-      }
-    });
-  }
-  return list;
-}
+// Nenhum fallback sintético: o KS Leads nunca fabrica leads.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -223,14 +174,14 @@ export default async function handler(req, res) {
                 trade_name: tags['name'] || name,
                 legal_name: tags['operator'] || `${name} LTDA`,
                 cnpj: null, // Será enriquecido no botão "Enriquecer" via BrasilAPI
-                cnpj_status: 'REGULAR',
+                cnpj_status: null,
                 registered_phone: '',
                 business_phone: formattedPhone || 'Não informado nas fontes',
-                whatsapp_status: isMobilePhone ? 'confirmado' : (formattedPhone ? 'nao_confirmado' : 'nao_encontrado'),
+                whatsapp_status: formattedPhone ? 'nao_confirmado' : 'nao_encontrado',
                 website_status: hasSite ? 'site_encontrado' : 'site_nao_encontrado',
                 website_url: hasSite ? rawWebsite : null,
-                google_rating: parseFloat((4.3 + (idx * 0.1) % 0.6).toFixed(1)),
-                google_reviews_count: 15 + (idx * 7),
+                google_rating: null,
+                google_reviews_count: null,
                 google_maps_url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name} ${city} ${state}`)}`,
                 category: category,
                 address: `${tags['addr:street'] || 'Área Central'}${tags['addr:housenumber'] ? ', ' + tags['addr:housenumber'] : ''}`,
@@ -251,7 +202,7 @@ export default async function handler(req, res) {
 
     // Se a busca na API externa não retornou registros suficientes ou falhou, usa a inteligência de leads locais
     if (!leads || leads.length === 0) {
-      leads = generateFallbackLeads(category, city, state, 10);
+      return res.status(200).json({ success: true, category, city, state: state.toUpperCase(), results_count: 0, credit_balance: isAdmin ? 999999 : profile.credit_balance, is_admin: isAdmin, leads: [], message: 'Nenhuma empresa real foi encontrada nas fontes consultadas.' });
     }
 
     // 7. Aplicação de filtros avançados solicitados pelo usuário
