@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Planos & Cakto — KS Leads Admin</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="app-sidebar" id="app-sidebar" style="background-color: #030712; border-right-color: rgba(56, 189, 248, 0.2);">
+      <div class="app-sidebar-header">
+        <a href="/admin/" class="brand-logo">
+          KS <span>ADMIN</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/admin/" class="nav-link">
+          <span>📊</span> Visão Geral
+        </a>
+        <a href="/admin/usuarios.html" class="nav-link">
+          <span>👥</span> Usuários
+        </a>
+        <a href="/admin/planos.html" class="nav-link active">
+          <span>⭐</span> Planos & Preços
+        </a>
+        <a href="/admin/pagamentos.html" class="nav-link">
+          <span>💳</span> Pagamentos & Webhooks
+        </a>
+        <a href="/admin/logs.html" class="nav-link">
+          <span>📝</span> Auditoria & LGPD
+        </a>
+        <a href="/admin/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações Globais
+        </a>
+        <a href="/app/" class="nav-link" style="margin-top: 1rem; color: #a78bfa;">
+          <span>🚪</span> Voltar ao App Cliente
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar" style="background: #2563eb;">P</div>
+          <div class="user-info">
+            <div class="user-name">Peter (Proprietário)</div>
+            <div class="user-credits" style="color: var(--success);">Acesso Ilimitado</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair do Sistema
+        </button>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Configuração de Planos & Checkout Cakto</h2>
+        </div>
+        <button id="btn-create-plan" class="btn btn-primary btn-sm">
+          <span>+</span> Novo Plano
+        </button>
+      </header>
+
+      <main class="app-content">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+          Os planos cadastrados aqui são refletidos dinamicamente na Landing Page e na tela de assinatura do cliente.
+        </p>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nome / Slug</th>
+                <th>Preço Mensal</th>
+                <th>Créditos Inclusos</th>
+                <th>Identificador Cakto</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="admin-plans-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+                  Carregando planos cadastrados...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Criar / Editar Plano -->
+  <div id="plan-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 580px;">
+      <div class="modal-header">
+        <h3 id="plan-modal-title">Configurar Plano</h3>
+        <button class="modal-close" id="btn-close-plan-modal">&times;</button>
+      </div>
+
+      <form id="form-save-plan">
+        <input type="hidden" id="plan-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="plan-name">Nome do Plano *</label>
+            <input type="text" id="plan-name" class="form-input" placeholder="Ex: Pro, Business" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="plan-slug">Slug Único *</label>
+            <input type="text" id="plan-slug" class="form-input" placeholder="Ex: pro, business" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="plan-price">Preço em Centavos (ex: 4990 = R$ 49,90) *</label>
+            <input type="number" id="plan-price" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="plan-credits">Créditos Inclusos *</label>
+            <input type="number" id="plan-credits" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="plan-cakto-offer">ID da Oferta / Produto Cakto</label>
+          <input type="text" id="plan-cakto-offer" class="form-input" placeholder="Ex: cakto_pro_offer">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="plan-cakto-url">URL do Checkout Cakto</label>
+          <input type="url" id="plan-cakto-url" class="form-input" placeholder="https://cakto.com.br/checkout/...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="plan-features">Benefícios (Um por linha)</label>
+          <textarea id="plan-features" class="form-textarea" placeholder="500 créditos mensais&#10;Enriquecimento prioritário&#10;Suporte VIP"></textarea>
+        </div>
+
+        <div class="form-check" style="margin-bottom: 1.5rem;">
+          <input type="checkbox" id="plan-is-active" checked>
+          <span style="font-size: 0.9rem;">Plano Ativo e Visível para Venda</span>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-plan">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Salvar Plano</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    let plansList = [];
+
+    async function init() {
+      const sessionData = await Auth.requireAuth({ requireAdmin: true });
+      if (!sessionData) return;
+
+      await loadPlans();
+
+      document.getElementById('btn-create-plan').addEventListener('click', openCreatePlanModal);
+      document.getElementById('btn-close-plan-modal').addEventListener('click', closePlanModal);
+      document.getElementById('btn-cancel-plan').addEventListener('click', closePlanModal);
+      document.getElementById('form-save-plan').addEventListener('submit', handleSavePlan);
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    async function loadPlans() {
+      const sb = getSupabase();
+      const { data, error } = await sb
+        .from('plans')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) {
+        Utils.showToast('Erro ao carregar planos.', 'error');
+        return;
+      }
+
+      plansList = data || [];
+      renderPlans();
+    }
+
+    function renderPlans() {
+      const tbody = document.getElementById('admin-plans-table-body');
+      if (!plansList.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Nenhum plano cadastrado. Clique em Novo Plano.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = plansList.map(p => `
+        <tr>
+          <td>
+            <strong style="color: #fff; display: block; font-size: 0.95rem;">${p.name}</strong>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">${p.slug}</span>
+          </td>
+          <td>
+            <strong style="color: var(--success);">${Utils.formatCurrency(p.price_cents / 100)}</strong>
+          </td>
+          <td>
+            <strong>${p.credits_included}</strong> créditos
+          </td>
+          <td>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">${p.cakto_offer_id || '-'}</span>
+          </td>
+          <td>
+            <span class="badge ${p.is_active ? 'badge-success' : 'badge-danger'}">
+              ${p.is_active ? 'Ativo' : 'Inativo'}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-outline btn-sm btn-edit-plan" data-id="${p.id}">
+              Editar
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.querySelectorAll('.btn-edit-plan').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          const plan = plansList.find(p => p.id === id);
+          if (plan) openEditPlanModal(plan);
+        });
+      });
+    }
+
+    function openCreatePlanModal() {
+      document.getElementById('plan-modal-title').textContent = 'Criar Novo Plano';
+      document.getElementById('plan-id').value = '';
+      document.getElementById('plan-name').value = '';
+      document.getElementById('plan-slug').value = '';
+      document.getElementById('plan-price').value = '4990';
+      document.getElementById('plan-credits').value = '200';
+      document.getElementById('plan-cakto-offer').value = '';
+      document.getElementById('plan-cakto-url').value = '';
+      document.getElementById('plan-features').value = '';
+      document.getElementById('plan-is-active').checked = true;
+      document.getElementById('plan-modal').classList.add('active');
+    }
+
+    function openEditPlanModal(plan) {
+      document.getElementById('plan-modal-title').textContent = `Editar Plano: ${plan.name}`;
+      document.getElementById('plan-id').value = plan.id;
+      document.getElementById('plan-name').value = plan.name;
+      document.getElementById('plan-slug').value = plan.slug;
+      document.getElementById('plan-price').value = plan.price_cents;
+      document.getElementById('plan-credits').value = plan.credits_included;
+      document.getElementById('plan-cakto-offer').value = plan.cakto_offer_id || '';
+      document.getElementById('plan-cakto-url').value = plan.cakto_checkout_url || '';
+      const featArr = Array.isArray(plan.features) ? plan.features : [];
+      document.getElementById('plan-features').value = featArr.join('\n');
+      document.getElementById('plan-is-active').checked = plan.is_active;
+      document.getElementById('plan-modal').classList.add('active');
+    }
+
+    function closePlanModal() {
+      document.getElementById('plan-modal').classList.remove('active');
+    }
+
+    async function handleSavePlan(e) {
+      e.preventDefault();
+      const sb = getSupabase();
+      const id = document.getElementById('plan-id').value;
+      const name = document.getElementById('plan-name').value.trim();
+      const slug = document.getElementById('plan-slug').value.trim().toLowerCase();
+      const price_cents = parseInt(document.getElementById('plan-price').value, 10);
+      const credits_included = parseInt(document.getElementById('plan-credits').value, 10);
+      const cakto_offer_id = document.getElementById('plan-cakto-offer').value.trim();
+      const cakto_checkout_url = document.getElementById('plan-cakto-url').value.trim();
+      const featuresRaw = document.getElementById('plan-features').value;
+      const features = featuresRaw.split('\n').map(s => s.trim()).filter(Boolean);
+      const is_active = document.getElementById('plan-is-active').checked;
+
+      const record = {
+        name,
+        slug,
+        price_cents,
+        credits_included,
+        cakto_offer_id,
+        cakto_checkout_url,
+        features,
+        is_active,
+        updated_at: new Date().toISOString()
+      };
+
+      let error = null;
+      if (id) {
+        const res = await sb.from('plans').update(record).eq('id', id);
+        error = res.error;
+      } else {
+        const res = await sb.from('plans').insert(record);
+        error = res.error;
+      }
+
+      if (error) {
+        Utils.showToast('Erro ao salvar plano: ' + error.message, 'error');
+        return;
+      }
+
+      Utils.showToast('Plano salvo com sucesso!', 'success');
+      closePlanModal();
+      await loadPlans();
+    }
+
+    init();
+  </script>
+</body>
+</html>

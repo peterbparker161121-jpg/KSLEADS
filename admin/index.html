@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Administrador — KS Leads</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Admin -->
+    <aside class="app-sidebar" id="app-sidebar" style="background-color: #030712; border-right-color: rgba(56, 189, 248, 0.2);">
+      <div class="app-sidebar-header">
+        <a href="/admin/" class="brand-logo">
+          KS <span>ADMIN</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/admin/" class="nav-link active">
+          <span>📊</span> Visão Geral
+        </a>
+        <a href="/admin/usuarios.html" class="nav-link">
+          <span>👥</span> Usuários
+        </a>
+        <a href="/admin/planos.html" class="nav-link">
+          <span>⭐</span> Planos & Preços
+        </a>
+        <a href="/admin/pagamentos.html" class="nav-link">
+          <span>💳</span> Pagamentos & Webhooks
+        </a>
+        <a href="/admin/logs.html" class="nav-link">
+          <span>📝</span> Auditoria & LGPD
+        </a>
+        <a href="/admin/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações Globais
+        </a>
+        <a href="/app/" class="nav-link" style="margin-top: 1rem; color: #a78bfa;">
+          <span>🚪</span> Voltar ao App Cliente
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar" style="background: #2563eb;">P</div>
+          <div class="user-info">
+            <div class="user-name">Peter (Proprietário)</div>
+            <div class="user-credits" style="color: var(--success);">Acesso Ilimitado</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair do Sistema
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Console de Administração</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <span class="badge badge-info">Ambiente Restrito</span>
+          <a href="/app/buscar.html" class="btn btn-primary btn-sm">Modo Prospecção Direta</a>
+        </div>
+      </header>
+
+      <main class="app-content">
+        <!-- Stats Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+          <div class="card">
+            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total de Usuários</span>
+            <div id="stat-total-users" style="font-size: 2rem; font-weight: 800; color: #fff;">--</div>
+            <div style="font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem;"><span id="stat-active-users">--</span> ativos</div>
+          </div>
+
+          <div class="card">
+            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Assinaturas Ativas</span>
+            <div id="stat-active-subs" style="font-size: 2rem; font-weight: 800; color: var(--success);">--</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Cakto recorrente</div>
+          </div>
+
+          <div class="card">
+            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Leads Salvos no Total</span>
+            <div id="stat-total-leads" style="font-size: 2rem; font-weight: 800; color: var(--accent);">--</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Em todos os tenants</div>
+          </div>
+
+          <div class="card">
+            <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Buscas Realizadas</span>
+            <div id="stat-total-searches" style="font-size: 2rem; font-weight: 800; color: var(--warning);">--</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">Consultas de mercado</div>
+          </div>
+        </div>
+
+        <!-- Quick Access Panels -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start;">
+          <div class="card">
+            <div class="card-header">
+              <h3>Novos Clientes Cadastrados</h3>
+              <a href="/admin/usuarios.html" style="font-size: 0.85rem; color: var(--accent);">Ver todos &rarr;</a>
+            </div>
+            <div id="admin-recent-users" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Carregando usuários...</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Últimos Eventos de Pagamento Cakto</h3>
+              <a href="/admin/pagamentos.html" style="font-size: 0.85rem; color: var(--accent);">Ver histórico &rarr;</a>
+            </div>
+            <div id="admin-recent-payments" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <p style="color: var(--text-muted); font-size: 0.85rem;">Carregando eventos...</p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    async function init() {
+      // Requer papel de Administrador
+      const sessionData = await Auth.requireAuth({ requireAdmin: true });
+      if (!sessionData) return;
+
+      const sb = getSupabase();
+
+      // Métricas gerais
+      const { data: profiles } = await sb.from('profiles').select('*');
+      const { data: leads } = await sb.from('leads').select('id');
+      const { data: searches } = await sb.from('searches').select('id');
+      const { data: payments } = await sb.from('payment_events').select('*').order('created_at', { ascending: false }).limit(5);
+
+      if (profiles) {
+        document.getElementById('stat-total-users').textContent = profiles.length;
+        const activeCount = profiles.filter(p => p.status === 'active').length;
+        const subsCount = profiles.filter(p => p.subscription_status === 'active').length;
+        document.getElementById('stat-active-users').textContent = activeCount;
+        document.getElementById('stat-active-subs').textContent = subsCount;
+
+        // Lista recente de usuários
+        const usersEl = document.getElementById('admin-recent-users');
+        usersEl.innerHTML = profiles.slice(0, 5).map(p => `
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-elevated); border-radius: var(--radius-md);">
+            <div>
+              <strong style="color: #fff; display: block; font-size: 0.9rem;">${p.full_name || p.email}</strong>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${p.email} • ${p.role === 'admin' ? 'Administrador' : 'Cliente'}</span>
+            </div>
+            <span class="badge ${p.status === 'active' ? 'badge-success' : 'badge-danger'}">${p.status}</span>
+          </div>
+        `).join('');
+      }
+
+      if (leads) {
+        document.getElementById('stat-total-leads').textContent = leads.length;
+      }
+
+      if (searches) {
+        document.getElementById('stat-total-searches').textContent = searches.length;
+      }
+
+      if (payments) {
+        const payEl = document.getElementById('admin-recent-payments');
+        if (!payments.length) {
+          payEl.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">Nenhum evento registrado ainda.</p>';
+        } else {
+          payEl.innerHTML = payments.map(pay => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-elevated); border-radius: var(--radius-md);">
+              <div>
+                <strong style="color: #fff; font-size: 0.85rem;">${pay.event_type}</strong>
+                <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">ID: ${pay.event_id}</span>
+              </div>
+              <span class="badge ${pay.status === 'paid' ? 'badge-success' : 'badge-warning'}">${pay.status}</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    init();
+  </script>
+</body>
+</html>

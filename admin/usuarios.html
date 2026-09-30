@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Usuários — KS Leads Admin</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="app-sidebar" id="app-sidebar" style="background-color: #030712; border-right-color: rgba(56, 189, 248, 0.2);">
+      <div class="app-sidebar-header">
+        <a href="/admin/" class="brand-logo">
+          KS <span>ADMIN</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/admin/" class="nav-link">
+          <span>📊</span> Visão Geral
+        </a>
+        <a href="/admin/usuarios.html" class="nav-link active">
+          <span>👥</span> Usuários
+        </a>
+        <a href="/admin/planos.html" class="nav-link">
+          <span>⭐</span> Planos & Preços
+        </a>
+        <a href="/admin/pagamentos.html" class="nav-link">
+          <span>💳</span> Pagamentos & Webhooks
+        </a>
+        <a href="/admin/logs.html" class="nav-link">
+          <span>📝</span> Auditoria & LGPD
+        </a>
+        <a href="/admin/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações Globais
+        </a>
+        <a href="/app/" class="nav-link" style="margin-top: 1rem; color: #a78bfa;">
+          <span>🚪</span> Voltar ao App Cliente
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar" style="background: #2563eb;">P</div>
+          <div class="user-info">
+            <div class="user-name">Peter (Proprietário)</div>
+            <div class="user-credits" style="color: var(--success);">Acesso Ilimitado</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair do Sistema
+        </button>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Gerenciamento de Clientes & Contas</h2>
+        </div>
+      </header>
+
+      <main class="app-content">
+        <div class="card" style="margin-bottom: 1.5rem; padding: 1rem 1.5rem;">
+          <div style="display: flex; gap: 1rem;">
+            <input type="text" id="admin-search-users" class="form-input" placeholder="Buscar usuário por nome ou e-mail...">
+            <select id="admin-filter-status" class="form-select" style="max-width: 200px;">
+              <option value="todos">Todos os Status</option>
+              <option value="active">Ativos</option>
+              <option value="suspended">Suspensos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Papel</th>
+                <th>Plano / Status</th>
+                <th>Saldo de Créditos</th>
+                <th>Data Cadastro</th>
+                <th>Ações Administrativas</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-table-body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem 1rem;">
+                  Carregando lista de clientes...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal Ações de Usuário (Créditos / Status) -->
+  <div id="user-action-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 id="modal-action-title">Ação no Usuário</h3>
+        <button class="modal-close" id="btn-close-action-modal">&times;</button>
+      </div>
+      <form id="form-user-action">
+        <input type="hidden" id="action-user-id">
+        <div class="form-group">
+          <label class="form-label" for="action-type">Tipo de Operação</label>
+          <select id="action-type" class="form-select">
+            <option value="add_credits">Adicionar Créditos</option>
+            <option value="remove_credits">Remover Créditos</option>
+            <option value="suspend_user">Suspender Conta</option>
+            <option value="reactivate_user">Reativar Conta</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="group-action-amount">
+          <label class="form-label" for="action-amount">Quantidade de Créditos</label>
+          <input type="number" id="action-amount" class="form-input" min="1" value="50">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="action-reason">Motivo / Justificativa</label>
+          <input type="text" id="action-reason" class="form-input" placeholder="Ex: Bônus de fidelidade, recarga manual, etc." required>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-cancel-action">Cancelar</button>
+          <button type="submit" class="btn btn-primary btn-sm">Confirmar Alteração</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    let currentSession = null;
+    let allUsers = [];
+
+    async function init() {
+      currentSession = await Auth.requireAuth({ requireAdmin: true });
+      if (!currentSession) return;
+
+      await loadUsers();
+
+      document.getElementById('admin-search-users').addEventListener('input', renderUsers);
+      document.getElementById('admin-filter-status').addEventListener('change', renderUsers);
+
+      document.getElementById('action-type').addEventListener('change', (e) => {
+        const val = e.currentTarget.value;
+        const amountGroup = document.getElementById('group-action-amount');
+        amountGroup.style.display = (val === 'add_credits' || val === 'remove_credits') ? 'block' : 'none';
+      });
+
+      document.getElementById('form-user-action').addEventListener('submit', handleActionSubmit);
+      document.getElementById('btn-close-action-modal').addEventListener('click', closeModal);
+      document.getElementById('btn-cancel-action').addEventListener('click', closeModal);
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    async function loadUsers() {
+      const sb = getSupabase();
+      const { data, error } = await sb
+        .from('profiles')
+        .select('*, plans(*)')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        Utils.showToast('Erro ao carregar usuários.', 'error');
+        return;
+      }
+
+      allUsers = data || [];
+      renderUsers();
+    }
+
+    function renderUsers() {
+      const term = document.getElementById('admin-search-users').value.toLowerCase();
+      const statusFilter = document.getElementById('admin-filter-status').value;
+
+      const filtered = allUsers.filter(u => {
+        const matchesTerm = !term || 
+          (u.full_name && u.full_name.toLowerCase().includes(term)) ||
+          (u.email && u.email.toLowerCase().includes(term));
+        const matchesStatus = statusFilter === 'todos' || u.status === statusFilter;
+        return matchesTerm && matchesStatus;
+      });
+
+      const tbody = document.getElementById('admin-users-table-body');
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">Nenhum usuário encontrado.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(u => `
+        <tr>
+          <td>
+            <strong style="color: #fff; font-size: 0.95rem; display: block;">${u.full_name || 'Sem nome'}</strong>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">${u.email}</span>
+          </td>
+          <td>
+            <span class="badge ${u.role === 'admin' ? 'badge-info' : 'badge-neutral'}">${u.role}</span>
+          </td>
+          <td>
+            <span style="display: block; font-weight: 600; color: #fff;">${u.plans?.name || 'Trial Gratuito'}</span>
+            <span class="badge ${u.status === 'active' ? 'badge-success' : 'badge-danger'}" style="font-size: 0.7rem;">
+              ${u.status}
+            </span>
+          </td>
+          <td>
+            <strong style="color: var(--accent);">${u.role === 'admin' ? 'Ilimitado' : u.credit_balance}</strong>
+          </td>
+          <td>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">${Utils.formatDate(u.created_at)}</span>
+          </td>
+          <td>
+            <button class="btn btn-outline btn-sm btn-open-action" data-id="${u.id}" data-name="${u.full_name || u.email}">
+              Gerenciar
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.querySelectorAll('.btn-open-action').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          const name = e.currentTarget.getAttribute('data-name');
+          openModal(id, name);
+        });
+      });
+    }
+
+    function openModal(userId, userName) {
+      document.getElementById('action-user-id').value = userId;
+      document.getElementById('modal-action-title').textContent = `Gerenciar: ${userName}`;
+      document.getElementById('user-action-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('user-action-modal').classList.remove('active');
+    }
+
+    async function handleActionSubmit(e) {
+      e.preventDefault();
+      const userId = document.getElementById('action-user-id').value;
+      const action = document.getElementById('action-type').value;
+      const amount = document.getElementById('action-amount').value;
+      const reason = document.getElementById('action-reason').value.trim();
+
+      try {
+        const resp = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentSession.token}`
+          },
+          body: JSON.stringify({
+            action,
+            target_user_id: userId,
+            amount,
+            reason
+          })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok) {
+          Utils.showToast(data.error || 'Erro ao executar ação.', 'error');
+          return;
+        }
+
+        Utils.showToast(data.message || 'Operação realizada com sucesso!', 'success');
+        closeModal();
+        await loadUsers();
+      } catch (err) {
+        Utils.showToast('Erro de conexão com o servidor.', 'error');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

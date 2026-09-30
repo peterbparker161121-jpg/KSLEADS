@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoria & LGPD — KS Leads Admin</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="app-sidebar" id="app-sidebar" style="background-color: #030712; border-right-color: rgba(56, 189, 248, 0.2);">
+      <div class="app-sidebar-header">
+        <a href="/admin/" class="brand-logo">
+          KS <span>ADMIN</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/admin/" class="nav-link">
+          <span>📊</span> Visão Geral
+        </a>
+        <a href="/admin/usuarios.html" class="nav-link">
+          <span>👥</span> Usuários
+        </a>
+        <a href="/admin/planos.html" class="nav-link">
+          <span>⭐</span> Planos & Preços
+        </a>
+        <a href="/admin/pagamentos.html" class="nav-link">
+          <span>💳</span> Pagamentos & Webhooks
+        </a>
+        <a href="/admin/logs.html" class="nav-link active">
+          <span>📝</span> Auditoria & LGPD
+        </a>
+        <a href="/admin/configuracoes.html" class="nav-link">
+          <span>⚙️</span> Configurações Globais
+        </a>
+        <a href="/app/" class="nav-link" style="margin-top: 1rem; color: #a78bfa;">
+          <span>🚪</span> Voltar ao App Cliente
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar" style="background: #2563eb;">P</div>
+          <div class="user-info">
+            <div class="user-name">Peter (Proprietário)</div>
+            <div class="user-credits" style="color: var(--success);">Acesso Ilimitado</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair do Sistema
+        </button>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Logs de Auditoria & Solicitações LGPD</h2>
+        </div>
+      </header>
+
+      <main class="app-content">
+        <!-- Solicitações LGPD -->
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <h3>Solicitações de Titulares de Dados (LGPD)</h3>
+            <span class="badge badge-neutral">Art. 18 LGPD</span>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>ID do Usuário</th>
+                  <th>Tipo de Solicitação</th>
+                  <th>Status</th>
+                  <th>Observações</th>
+                </tr>
+              </thead>
+              <tbody id="lgpd-requests-body">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    Nenhuma solicitação de titular pendente.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div class="card">
+          <div class="card-header">
+            <h3>Trilha de Auditoria Administrativa</h3>
+          </div>
+
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data / Hora</th>
+                  <th>Ação Executada</th>
+                  <th>Alvo</th>
+                  <th>Detalhes</th>
+                </tr>
+              </thead>
+              <tbody id="audit-logs-body">
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                    Carregando registros de auditoria...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    async function init() {
+      const sessionData = await Auth.requireAuth({ requireAdmin: true });
+      if (!sessionData) return;
+
+      const sb = getSupabase();
+
+      // Busca solicitações LGPD
+      const { data: requests } = await sb.from('data_requests').select('*').order('created_at', { ascending: false });
+      if (requests && requests.length) {
+        document.getElementById('lgpd-requests-body').innerHTML = requests.map(r => `
+          <tr>
+            <td>${Utils.formatDateTime(r.created_at)}</td>
+            <td><code>${r.user_id}</code></td>
+            <td><strong style="color: #fff;">${r.request_type}</strong></td>
+            <td><span class="badge ${r.status === 'completed' ? 'badge-success' : 'badge-warning'}">${r.status}</span></td>
+            <td>${r.notes || '-'}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Busca logs de auditoria
+      const { data: logs } = await sb.from('audit_logs').select('*').order('created_at', { ascending: false });
+      if (logs && logs.length) {
+        document.getElementById('audit-logs-body').innerHTML = logs.map(l => `
+          <tr>
+            <td>${Utils.formatDateTime(l.created_at)}</td>
+            <td><strong style="color: #fff;">${l.action}</strong></td>
+            <td>${l.target_type || '-'} (${l.target_id || '-'})</td>
+            <td><pre style="font-size: 0.75rem; color: #94a3b8;">${JSON.stringify(l.details)}</pre></td>
+          </tr>
+        `).join('');
+      } else {
+        document.getElementById('audit-logs-body').innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">Nenhum log registrado ainda.</td></tr>';
+      }
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    init();
+  </script>
+</body>
+</html>

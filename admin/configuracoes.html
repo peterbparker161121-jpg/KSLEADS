@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações Globais — KS Leads Admin</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="app-sidebar" id="app-sidebar" style="background-color: #030712; border-right-color: rgba(56, 189, 248, 0.2);">
+      <div class="app-sidebar-header">
+        <a href="/admin/" class="brand-logo">
+          KS <span>ADMIN</span>
+        </a>
+      </div>
+
+      <nav class="app-nav">
+        <a href="/admin/" class="nav-link">
+          <span>📊</span> Visão Geral
+        </a>
+        <a href="/admin/usuarios.html" class="nav-link">
+          <span>👥</span> Usuários
+        </a>
+        <a href="/admin/planos.html" class="nav-link">
+          <span>⭐</span> Planos & Preços
+        </a>
+        <a href="/admin/pagamentos.html" class="nav-link">
+          <span>💳</span> Pagamentos & Webhooks
+        </a>
+        <a href="/admin/logs.html" class="nav-link">
+          <span>📝</span> Auditoria & LGPD
+        </a>
+        <a href="/admin/configuracoes.html" class="nav-link active">
+          <span>⚙️</span> Configurações Globais
+        </a>
+        <a href="/app/" class="nav-link" style="margin-top: 1rem; color: #a78bfa;">
+          <span>🚪</span> Voltar ao App Cliente
+        </a>
+      </nav>
+
+      <div class="app-sidebar-footer">
+        <div class="user-snippet">
+          <div class="user-avatar" style="background: #2563eb;">P</div>
+          <div class="user-info">
+            <div class="user-name">Peter (Proprietário)</div>
+            <div class="user-credits" style="color: var(--success);">Acesso Ilimitado</div>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn btn-outline btn-sm" style="width: 100%;">
+          Sair do Sistema
+        </button>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header class="app-topbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button id="btn-toggle-sidebar" class="btn btn-outline btn-sm" style="display: none;">☰</button>
+          <h2>Parâmetros e Configurações Globais</h2>
+        </div>
+      </header>
+
+      <main class="app-content" style="max-width: 800px;">
+        <div class="card" style="margin-bottom: 2rem;">
+          <div class="card-header">
+            <h3>Parâmetros Centrais do Sistema</h3>
+          </div>
+
+          <form id="form-system-settings">
+            <div class="form-group">
+              <label class="form-label" for="setting-whatsapp">WhatsApp Oficial de Suporte</label>
+              <input type="text" id="setting-whatsapp" class="form-input" value="+55 19 97801-3794" required>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Exibido em todas as páginas e links de suporte.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="setting-app-name">Nome da Plataforma</label>
+              <input type="text" id="setting-app-name" class="form-input" value="KS Leads" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="cost-search">Custo de Créditos por Busca</label>
+                <input type="number" id="cost-search" class="form-input" value="1" min="1" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="cost-enrich">Custo de Créditos por Enriquecimento</label>
+                <input type="number" id="cost-enrich" class="form-input" value="1" min="0" required>
+              </div>
+            </div>
+
+            <div class="form-check" style="margin-bottom: 1.5rem;">
+              <input type="checkbox" id="setting-maintenance">
+              <span style="font-size: 0.9rem;">Ativar Modo de Manutenção (Apenas Admins podem acessar)</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm">Salvar Parâmetros</button>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script type="module">
+    import { Utils } from '/assets/js/utils.js';
+    import { Auth, getSupabase } from '/assets/js/supabase-client.js';
+
+    async function init() {
+      const sessionData = await Auth.requireAuth({ requireAdmin: true });
+      if (!sessionData) return;
+
+      const sb = getSupabase();
+
+      // Carrega valores atuais
+      const { data: settings } = await sb.from('system_settings').select('*');
+      if (settings) {
+        settings.forEach(s => {
+          if (s.key === 'support_whatsapp') document.getElementById('setting-whatsapp').value = s.value;
+          if (s.key === 'app_name') document.getElementById('setting-app-name').value = s.value;
+          if (s.key === 'credit_costs') {
+            document.getElementById('cost-search').value = s.value.search || 1;
+            document.getElementById('cost-enrich').value = s.value.enrichment || 1;
+          }
+          if (s.key === 'maintenance_mode') document.getElementById('setting-maintenance').checked = Boolean(s.value);
+        });
+      }
+
+      document.getElementById('form-system-settings').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const whatsapp = document.getElementById('setting-whatsapp').value.trim();
+        const appName = document.getElementById('setting-app-name').value.trim();
+        const searchCost = parseInt(document.getElementById('cost-search').value, 10);
+        const enrichCost = parseInt(document.getElementById('cost-enrich').value, 10);
+        const maintenance = document.getElementById('setting-maintenance').checked;
+
+        await sb.from('system_settings').upsert([
+          { key: 'support_whatsapp', value: whatsapp, updated_at: new Date().toISOString() },
+          { key: 'app_name', value: appName, updated_at: new Date().toISOString() },
+          { key: 'credit_costs', value: { search: searchCost, enrichment: enrichCost }, updated_at: new Date().toISOString() },
+          { key: 'maintenance_mode', value: maintenance, updated_at: new Date().toISOString() }
+        ]);
+
+        Utils.showToast('Configurações salvas com sucesso!', 'success');
+      });
+
+      document.getElementById('btn-logout').addEventListener('click', () => Auth.signOut());
+    }
+
+    init();
+  </script>
+</body>
+</html>
